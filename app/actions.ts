@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
-import type { Exercise, ExerciseRow } from "@/lib/types";
+import type { Category, Exercise, ExerciseRow } from "@/lib/types";
+import { CATEGORIES } from "@/lib/types";
 
 const TABLE = "exercises";
 
@@ -13,6 +14,9 @@ function mapRow(row: ExerciseRow): Exercise {
     description: row.description,
     videoUrl: row.video_url,
     notes: row.notes ?? "",
+    category: (CATEGORIES as readonly string[]).includes(row.category ?? "")
+      ? (row.category as Category)
+      : null,
     createdAt: row.created_at,
   };
 }
@@ -26,7 +30,7 @@ export async function getExercises(): Promise<Exercise[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from(TABLE)
-    .select("id, title, description, video_url, notes, created_at")
+    .select("id, title, description, video_url, notes, category, created_at")
     .order("created_at", { ascending: false });
 
   if (error) throw toDbError(error, "Error al cargar los ejercicios.");
@@ -37,6 +41,10 @@ export async function createExercise(formData: FormData): Promise<void> {
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const videoUrl = String(formData.get("videoUrl") ?? "").trim();
+  const categoryRaw = String(formData.get("category") ?? "").trim();
+  const category = (CATEGORIES as readonly string[]).includes(categoryRaw)
+    ? (categoryRaw as Category)
+    : null;
 
   if (!title || !description || !videoUrl) {
     throw new Error("Completa todos los campos.");
@@ -54,6 +62,7 @@ export async function createExercise(formData: FormData): Promise<void> {
     description,
     video_url: videoUrl,
     notes: "",
+    category,
   });
 
   if (error) throw toDbError(error, "Error al guardar el ejercicio.");

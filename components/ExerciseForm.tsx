@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { createExercise } from "@/app/actions";
 import { createClient } from "@/utils/supabase/client";
+import { CATEGORIES } from "@/lib/types";
 
 type VideoMode = "url" | "file";
 
@@ -110,6 +111,22 @@ export default function ExerciseForm() {
             required
             className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 resize-none"
           />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="category" className="text-sm font-medium text-slate-700">
+            Categoría
+          </label>
+          <select
+            id="category"
+            name="category"
+            className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 bg-white"
+          >
+            <option value="">Sin categoría</option>
+            {CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
         </div>
 
         <div className="flex flex-col gap-2">

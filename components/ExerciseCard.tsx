@@ -78,6 +78,11 @@ export default function ExerciseCard({ exercise }: Props) {
       {/* Content */}
       <div className="p-5 flex flex-col gap-3">
         <div>
+          {exercise.category && (
+            <span className="inline-block text-xs font-medium bg-blue-50 text-blue-600 border border-blue-100 rounded-full px-2.5 py-0.5 mb-2">
+              {exercise.category}
+            </span>
+          )}
           <h3 className="font-semibold text-slate-800 text-base mb-1">
             {exercise.title}
           </h3>
