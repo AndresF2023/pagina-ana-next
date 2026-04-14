@@ -53,7 +53,9 @@ export async function createExercise(formData: FormData): Promise<void> {
   });
 
   if (!title || !description || !videoUrl) {
-    throw new Error("Completa todos los campos.");
+    throw new Error(
+      `Campos vacíos: ${[!title && "título", !description && "descripción", !videoUrl && "videoUrl"].filter(Boolean).join(", ")}`
+    );
   }
 
   try {
