@@ -17,11 +17,11 @@ export default async function Home() {
 
   return (
     <>
-      <header className="bg-gradient-to-r from-blue-600 to-green-500 text-white px-4">
+      <header className="bg-gradient-to-r from-sky-400 to-sky-600 text-white px-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between py-4">
           <div className="py-4 text-center flex-1">
-            <h1 className="text-3xl font-bold mb-1">Biblioteca de Ejercicios de Tenis</h1>
-            <p className="text-blue-100 text-base">
+            <h1 className="text-3xl font-bold mb-1">Tenis del 9</h1>
+            <p className="text-sky-100 text-base">
               Visualiza cada ejercicio y agrega tus indicaciones personalizadas.
             </p>
           </div>

@@ -79,7 +79,7 @@ export default function ExerciseCard({ exercise }: Props) {
       <div className="p-5 flex flex-col gap-3">
         <div>
           {exercise.category && (
-            <span className="inline-block text-xs font-medium bg-blue-50 text-blue-600 border border-blue-100 rounded-full px-2.5 py-0.5 mb-2">
+            <span className="inline-block text-xs font-medium bg-sky-50 text-sky-600 border border-sky-100 rounded-full px-2.5 py-0.5 mb-2">
               {exercise.category}
             </span>
           )}
@@ -106,7 +106,7 @@ export default function ExerciseCard({ exercise }: Props) {
             rows={4}
             placeholder="Ej: Mantener rodillas flexionadas y terminar el golpe arriba"
             onChange={(e) => debouncedSave(e.target.value)}
-            className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 resize-none"
+            className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 resize-none"
           />
         </div>
 
@@ -115,7 +115,7 @@ export default function ExerciseCard({ exercise }: Props) {
             href={exercise.videoUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
+            className="text-sm text-sky-600 hover:text-sky-700 hover:underline"
           >
             Abrir video ↗
           </a>

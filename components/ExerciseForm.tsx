@@ -102,7 +102,7 @@ export default function ExerciseForm() {
             type="text"
             placeholder="Ej: Saque con objetivo"
             required
-            className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+            className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
           />
         </div>
 
@@ -116,7 +116,7 @@ export default function ExerciseForm() {
             rows={3}
             placeholder="¿Qué se trabaja en este ejercicio?"
             required
-            className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 resize-none"
+            className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 resize-none"
           />
         </div>
 
@@ -127,7 +127,7 @@ export default function ExerciseForm() {
           <select
             id="category"
             name="category"
-            className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 bg-white"
+            className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 bg-white"
           >
             <option value="">Sin categoría</option>
             {CATEGORIES.map((cat) => (
@@ -171,15 +171,15 @@ export default function ExerciseForm() {
               type="url"
               placeholder="https://www.youtube.com/watch?v=..."
               required
-              className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+              className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
             />
           ) : (
-            <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl px-4 py-6 cursor-pointer transition-colors ${selectedFile ? "border-blue-400 bg-blue-50/40" : "border-slate-200 hover:border-blue-400 hover:bg-blue-50/40"}`}>
-              <svg className={`w-7 h-7 ${selectedFile ? "text-blue-500" : "text-slate-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl px-4 py-6 cursor-pointer transition-colors ${selectedFile ? "border-sky-400 bg-sky-50/40" : "border-slate-200 hover:border-sky-400 hover:bg-sky-50/40"}`}>
+              <svg className={`w-7 h-7 ${selectedFile ? "text-sky-500" : "text-slate-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
               </svg>
               {selectedFile ? (
-                <span className="text-sm text-blue-700 font-medium text-center break-all px-2">{selectedFile}</span>
+                <span className="text-sm text-sky-700 font-medium text-center break-all px-2">{selectedFile}</span>
               ) : (
                 <>
                   <span className="text-sm text-slate-500">Hacé clic para seleccionar un video</span>
@@ -212,7 +212,7 @@ export default function ExerciseForm() {
         <button
           type="submit"
           disabled={isLoading}
-          className="self-start bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium px-5 py-2 rounded-xl transition-colors cursor-pointer disabled:cursor-not-allowed"
+          className="self-start bg-sky-600 hover:bg-sky-700 disabled:bg-sky-400 text-white text-sm font-medium px-5 py-2 rounded-xl transition-colors cursor-pointer disabled:cursor-not-allowed"
         >
           {uploading ? "Subiendo video..." : isPending ? "Guardando..." : "Guardar ejercicio"}
         </button>

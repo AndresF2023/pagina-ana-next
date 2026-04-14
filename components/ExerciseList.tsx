@@ -49,7 +49,7 @@ export default function ExerciseList({ exercises }: Props) {
           placeholder="Buscar ejercicio..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+          className="w-full border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
         />
       </div>
 
@@ -61,8 +61,8 @@ export default function ExerciseList({ exercises }: Props) {
             onClick={() => setActiveCategory(null)}
             className={`text-xs px-3 py-1.5 rounded-full border transition-colors cursor-pointer ${
               activeCategory === null
-                ? "bg-blue-600 text-white border-blue-600"
-                : "bg-white text-slate-600 border-slate-200 hover:border-blue-400 hover:text-blue-600"
+                ? "bg-sky-600 text-white border-sky-600"
+                : "bg-white text-slate-600 border-slate-200 hover:border-sky-400 hover:text-sky-600"
             }`}
           >
             Todos
@@ -74,8 +74,8 @@ export default function ExerciseList({ exercises }: Props) {
               onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
               className={`text-xs px-3 py-1.5 rounded-full border transition-colors cursor-pointer ${
                 activeCategory === cat
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white text-slate-600 border-slate-200 hover:border-blue-400 hover:text-blue-600"
+                  ? "bg-sky-600 text-white border-sky-600"
+                  : "bg-white text-slate-600 border-slate-200 hover:border-sky-400 hover:text-sky-600"
               }`}
             >
               {cat}
