@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useTransition } from "react";
 import { deleteExercise, updateNotes } from "@/app/actions";
-import { getEmbedUrl, getYouTubeThumbnail } from "@/lib/video";
+import { getEmbedUrl, getYouTubeThumbnail, isDirectVideo } from "@/lib/video";
 import type { Exercise } from "@/lib/types";
 
 interface Props {
@@ -21,6 +21,7 @@ export default function ExerciseCard({ exercise }: Props) {
   const [isPending, startTransition] = useTransition();
   const embedUrl = getEmbedUrl(exercise.videoUrl);
   const thumbnailUrl = getYouTubeThumbnail(exercise.videoUrl);
+  const directVideo = isDirectVideo(exercise.videoUrl);
 
   const debouncedSave = useRef(
     debounce((notes: string) => {
@@ -41,7 +42,13 @@ export default function ExerciseCard({ exercise }: Props) {
     <article className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
       {/* Video */}
       <div className="aspect-video bg-black">
-        {embedUrl ? (
+        {directVideo ? (
+          <video
+            src={exercise.videoUrl}
+            controls
+            className="w-full h-full object-contain"
+          />
+        ) : embedUrl ? (
           <iframe
             src={embedUrl}
             title={exercise.title}

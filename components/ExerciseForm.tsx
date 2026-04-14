@@ -2,23 +2,62 @@
 
 import { useRef, useState, useTransition } from "react";
 import { createExercise } from "@/app/actions";
+import { createClient } from "@/utils/supabase/client";
+
+type VideoMode = "url" | "file";
 
 export default function ExerciseForm() {
   const formRef = useRef<HTMLFormElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [videoMode, setVideoMode] = useState<VideoMode>("url");
+  const [uploading, setUploading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     setSuccess(false);
 
     const formData = new FormData(e.currentTarget);
+
+    if (videoMode === "file") {
+      const file = formData.get("videoFile") as File | null;
+      if (!file || file.size === 0) {
+        setError("Selecciona un archivo de video.");
+        return;
+      }
+
+      setUploading(true);
+      try {
+        const supabase = createClient();
+        const ext = file.name.split(".").pop() ?? "mp4";
+        const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("videos")
+          .upload(filename, file, { contentType: file.type });
+
+        if (uploadError) throw new Error(`Error al subir el video: ${uploadError.message}`);
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("videos")
+          .getPublicUrl(filename);
+
+        formData.set("videoUrl", publicUrl);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error al subir el video.");
+        setUploading(false);
+        return;
+      }
+      setUploading(false);
+    }
+
     startTransition(async () => {
       try {
         await createExercise(formData);
         formRef.current?.reset();
+        setVideoMode("url");
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
       } catch (err) {
@@ -26,6 +65,8 @@ export default function ExerciseForm() {
       }
     });
   }
+
+  const isLoading = uploading || isPending;
 
   return (
     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 mb-8">
@@ -61,18 +102,61 @@ export default function ExerciseForm() {
           />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="videoUrl" className="text-sm font-medium text-slate-700">
-            URL del video (YouTube o Vimeo)
-          </label>
-          <input
-            id="videoUrl"
-            name="videoUrl"
-            type="url"
-            placeholder="https://www.youtube.com/watch?v=..."
-            required
-            className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
-          />
+        <div className="flex flex-col gap-2">
+          <span className="text-sm font-medium text-slate-700">Video</span>
+
+          {/* Selector de modo */}
+          <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-fit">
+            <button
+              type="button"
+              onClick={() => setVideoMode("url")}
+              className={`text-sm px-4 py-1.5 rounded-lg transition-colors ${
+                videoMode === "url"
+                  ? "bg-white text-slate-800 shadow-sm font-medium"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              YouTube / Vimeo
+            </button>
+            <button
+              type="button"
+              onClick={() => setVideoMode("file")}
+              className={`text-sm px-4 py-1.5 rounded-lg transition-colors ${
+                videoMode === "file"
+                  ? "bg-white text-slate-800 shadow-sm font-medium"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              Subir video propio
+            </button>
+          </div>
+
+          {videoMode === "url" ? (
+            <input
+              name="videoUrl"
+              type="url"
+              placeholder="https://www.youtube.com/watch?v=..."
+              required
+              className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+            />
+          ) : (
+            <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-200 rounded-xl px-4 py-6 cursor-pointer hover:border-blue-400 hover:bg-blue-50/40 transition-colors">
+              <svg className="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+              </svg>
+              <span className="text-sm text-slate-500">
+                Arrastrá o hacé clic para seleccionar un video
+              </span>
+              <span className="text-xs text-slate-400">MP4, MOV, WebM — hasta lo que permita Supabase</span>
+              <input
+                name="videoFile"
+                type="file"
+                accept="video/*"
+                required
+                className="sr-only"
+              />
+            </label>
+          )}
         </div>
 
         {error && (
@@ -89,10 +173,10 @@ export default function ExerciseForm() {
 
         <button
           type="submit"
-          disabled={isPending}
+          disabled={isLoading}
           className="self-start bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium px-5 py-2 rounded-xl transition-colors cursor-pointer disabled:cursor-not-allowed"
         >
-          {isPending ? "Guardando..." : "Guardar ejercicio"}
+          {uploading ? "Subiendo video..." : isPending ? "Guardando..." : "Guardar ejercicio"}
         </button>
       </form>
     </div>

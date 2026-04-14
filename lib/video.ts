@@ -49,3 +49,12 @@ export function getYouTubeThumbnail(url: string): string {
     return "";
   }
 }
+
+export function isDirectVideo(url: string): boolean {
+  try {
+    const pathname = new URL(url).pathname.toLowerCase();
+    return /\.(mp4|webm|mov|m4v|ogv|mkv|avi)$/.test(pathname);
+  } catch {
+    return false;
+  }
+}
