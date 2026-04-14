@@ -5,10 +5,11 @@ import JugadorDetail from "@/components/JugadorDetail";
 
 export const dynamic = "force-dynamic";
 
-export default async function JugadorPage({ params }: { params: { id: string } }) {
+export default async function JugadorPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const [jugador, torneos] = await Promise.all([
-    getJugador(params.id),
-    getTorneos(params.id),
+    getJugador(id),
+    getTorneos(id),
   ]);
 
   if (!jugador) notFound();
