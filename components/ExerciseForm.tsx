@@ -13,6 +13,7 @@ export default function ExerciseForm() {
   const [isPending, startTransition] = useTransition();
   const [videoMode, setVideoMode] = useState<VideoMode>("url");
   const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -24,7 +25,7 @@ export default function ExerciseForm() {
     if (videoMode === "file") {
       const file = formData.get("videoFile") as File | null;
       if (!file || file.size === 0) {
-        setError("Selecciona un archivo de video.");
+        setError("Seleccioná un archivo de video antes de guardar.");
         return;
       }
 
@@ -45,6 +46,7 @@ export default function ExerciseForm() {
           .getPublicUrl(filename);
 
         formData.set("videoUrl", publicUrl);
+        formData.delete("videoFile");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error al subir el video.");
         setUploading(false);
@@ -58,6 +60,7 @@ export default function ExerciseForm() {
         await createExercise(formData);
         formRef.current?.reset();
         setVideoMode("url");
+        setSelectedFile(null);
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
       } catch (err) {
@@ -73,7 +76,7 @@ export default function ExerciseForm() {
       <h2 className="text-lg font-semibold text-slate-800 mb-4">
         Agregar ejercicio
       </h2>
-      <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form ref={formRef} onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <label htmlFor="title" className="text-sm font-medium text-slate-700">
             Nombre del ejercicio
@@ -109,7 +112,7 @@ export default function ExerciseForm() {
           <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-fit">
             <button
               type="button"
-              onClick={() => setVideoMode("url")}
+              onClick={() => { setVideoMode("url"); setSelectedFile(null); }}
               className={`text-sm px-4 py-1.5 rounded-lg transition-colors ${
                 videoMode === "url"
                   ? "bg-white text-slate-800 shadow-sm font-medium"
@@ -120,7 +123,7 @@ export default function ExerciseForm() {
             </button>
             <button
               type="button"
-              onClick={() => setVideoMode("file")}
+              onClick={() => { setVideoMode("file"); setSelectedFile(null); }}
               className={`text-sm px-4 py-1.5 rounded-lg transition-colors ${
                 videoMode === "file"
                   ? "bg-white text-slate-800 shadow-sm font-medium"
@@ -140,20 +143,24 @@ export default function ExerciseForm() {
               className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
             />
           ) : (
-            <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-200 rounded-xl px-4 py-6 cursor-pointer hover:border-blue-400 hover:bg-blue-50/40 transition-colors">
-              <svg className="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl px-4 py-6 cursor-pointer transition-colors ${selectedFile ? "border-blue-400 bg-blue-50/40" : "border-slate-200 hover:border-blue-400 hover:bg-blue-50/40"}`}>
+              <svg className={`w-7 h-7 ${selectedFile ? "text-blue-500" : "text-slate-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
               </svg>
-              <span className="text-sm text-slate-500">
-                Arrastrá o hacé clic para seleccionar un video
-              </span>
-              <span className="text-xs text-slate-400">MP4, MOV, WebM — hasta lo que permita Supabase</span>
+              {selectedFile ? (
+                <span className="text-sm text-blue-700 font-medium text-center break-all px-2">{selectedFile}</span>
+              ) : (
+                <>
+                  <span className="text-sm text-slate-500">Hacé clic para seleccionar un video</span>
+                  <span className="text-xs text-slate-400">MP4, MOV, WebM</span>
+                </>
+              )}
               <input
                 name="videoFile"
                 type="file"
                 accept="video/*"
-                required
                 className="sr-only"
+                onChange={(e) => setSelectedFile(e.target.files?.[0]?.name ?? null)}
               />
             </label>
           )}
