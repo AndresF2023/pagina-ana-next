@@ -29,3 +29,33 @@ export interface ExerciseRow {
   category: string | null;
   created_at: string;
 }
+
+export interface Jugador {
+  id: string;
+  nombre: string;
+  apellido: string;
+  perfil: string;
+  correcciones_tecnicas: string;
+  created_at: string;
+}
+
+export interface Torneo {
+  id: string;
+  jugador_id: string;
+  nombre: string;
+  fecha: string;
+  lugar: string;
+  created_at: string;
+}
+
+export const TIPOS_PLANIFICACION = ["diaria", "semanal", "mensual"] as const;
+export type TipoPlanificacion = (typeof TIPOS_PLANIFICACION)[number];
+
+export interface Planificacion {
+  id: string;
+  tipo: TipoPlanificacion;
+  titulo: string;
+  contenido: string;
+  fecha: string;
+  created_at: string;
+}
