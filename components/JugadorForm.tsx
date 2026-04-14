@@ -35,27 +35,25 @@ export default function JugadorForm() {
     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 mb-8">
       <h2 className="text-lg font-semibold text-slate-800 mb-4">Agregar jugador/a</h2>
       <form ref={formRef} onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
-        <div className="flex gap-3">
-          <div className="flex flex-col gap-1 flex-1">
-            <label htmlFor="nombre" className="text-sm font-medium text-slate-700">Nombre</label>
-            <input
-              id="nombre"
-              name="nombre"
-              type="text"
-              placeholder="Ej: María"
-              className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
-            />
-          </div>
-          <div className="flex flex-col gap-1 flex-1">
-            <label htmlFor="apellido" className="text-sm font-medium text-slate-700">Apellido</label>
-            <input
-              id="apellido"
-              name="apellido"
-              type="text"
-              placeholder="Ej: García"
-              className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
-            />
-          </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="apellido" className="text-sm font-medium text-slate-700">Apellido</label>
+          <input
+            id="apellido"
+            name="apellido"
+            type="text"
+            placeholder="Ej: García"
+            className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="nombre" className="text-sm font-medium text-slate-700">Nombre</label>
+          <input
+            id="nombre"
+            name="nombre"
+            type="text"
+            placeholder="Ej: María"
+            className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
+          />
         </div>
 
         {error && (
