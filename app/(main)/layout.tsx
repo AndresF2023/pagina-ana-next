@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { signOut } from "@/app/login/actions";
 import Nav from "@/components/Nav";
 
@@ -8,7 +7,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <header className="bg-gradient-to-r from-sky-400 to-sky-600 text-white px-4">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between py-4 gap-3">
           <div className="flex items-center gap-2.5 whitespace-nowrap">
-            <Image src="/club.png" alt="Logo Club" width={44} height={44} className="rounded-full" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/club.png" alt="Logo Club" width={44} height={44} className="rounded-full" />
             <span className="text-2xl font-bold">Tenis del 9</span>
           </div>
           <Nav />

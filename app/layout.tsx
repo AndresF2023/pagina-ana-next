@@ -7,7 +7,6 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Tenis del 9",
   description: "Biblioteca de ejercicios de tenis con videos y notas personalizadas.",
-  icons: { icon: "/club.png" },
 };
 
 export default function RootLayout({
