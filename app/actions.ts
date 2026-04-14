@@ -46,6 +46,12 @@ export async function createExercise(formData: FormData): Promise<void> {
     ? (categoryRaw as Category)
     : null;
 
+  console.log("[createExercise] campos recibidos:", {
+    title: title || "(vacío)",
+    description: description ? "(ok)" : "(vacío)",
+    videoUrl: videoUrl || "(vacío)",
+  });
+
   if (!title || !description || !videoUrl) {
     throw new Error("Completa todos los campos.");
   }
