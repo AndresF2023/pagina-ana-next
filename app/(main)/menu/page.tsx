@@ -3,7 +3,7 @@ import Link from "next/link";
 const secciones = [
   {
     href: "/ejercicios",
-    titulo: "Ejercicios",
+    titulo: "Biblioteca",
     descripcion: "Biblioteca de ejercicios con videos y notas personalizadas.",
     icono: "🎾",
   },

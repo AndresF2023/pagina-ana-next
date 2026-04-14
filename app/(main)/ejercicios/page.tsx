@@ -18,7 +18,7 @@ export default async function EjerciciosPage() {
     <>
       <ExerciseForm />
       <section>
-        <h2 className="text-lg font-semibold text-slate-800 mb-4">Ejercicios</h2>
+        <h2 className="text-lg font-semibold text-slate-800 mb-4">Biblioteca</h2>
         {dbError && (
           <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">
             Error al cargar: {dbError}
