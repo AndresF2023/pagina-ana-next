@@ -25,7 +25,7 @@ export function getEmbedUrl(url: string): string {
     const youtubeId = getYouTubeVideoId(parsed);
 
     if (youtubeId) {
-      return `https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1`;
+      return `https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1&vq=hd1080`;
     }
 
     if (host.includes("vimeo.com")) {
