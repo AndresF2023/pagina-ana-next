@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/utils/supabase/server";
 import type { Exercise, ExerciseRow } from "@/lib/types";
 
 const TABLE = "exercises";
@@ -18,6 +18,7 @@ function mapRow(row: ExerciseRow): Exercise {
 }
 
 export async function getExercises(): Promise<Exercise[]> {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from(TABLE)
     .select("id, title, description, video_url, notes, created_at")
@@ -36,6 +37,7 @@ export async function createExercise(formData: FormData): Promise<void> {
     throw new Error("Completa todos los campos.");
   }
 
+  const supabase = await createClient();
   const { error } = await supabase.from(TABLE).insert({
     title,
     description,
@@ -48,12 +50,14 @@ export async function createExercise(formData: FormData): Promise<void> {
 }
 
 export async function deleteExercise(id: string): Promise<void> {
+  const supabase = await createClient();
   const { error } = await supabase.from(TABLE).delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/");
 }
 
 export async function updateNotes(id: string, notes: string): Promise<void> {
+  const supabase = await createClient();
   const { error } = await supabase
     .from(TABLE)
     .update({ notes })

@@ -1,12 +1,17 @@
 import { getExercises } from "./actions";
+import { signOut } from "./login/actions";
 import ExerciseForm from "@/components/ExerciseForm";
 import ExerciseList from "@/components/ExerciseList";
+import { createClient } from "@/utils/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   let exercises: Awaited<ReturnType<typeof getExercises>> = [];
   let dbError: string | null = null;
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   try {
     exercises = await getExercises();
@@ -16,11 +21,23 @@ export default async function Home() {
 
   return (
     <>
-      <header className="bg-gradient-to-r from-blue-600 to-green-500 text-white py-10 px-4 text-center">
-        <h1 className="text-3xl font-bold mb-2">Biblioteca de Ejercicios de Tenis</h1>
-        <p className="text-blue-100 text-base">
-          Visualiza cada ejercicio y agrega tus indicaciones personalizadas.
-        </p>
+      <header className="bg-gradient-to-r from-blue-600 to-green-500 text-white px-4">
+        <div className="max-w-5xl mx-auto flex items-center justify-between py-4">
+          <div className="py-4 text-center flex-1">
+            <h1 className="text-3xl font-bold mb-1">Biblioteca de Ejercicios de Tenis</h1>
+            <p className="text-blue-100 text-base">
+              Visualiza cada ejercicio y agrega tus indicaciones personalizadas.
+            </p>
+          </div>
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="text-sm text-white/80 hover:text-white border border-white/30 hover:border-white/60 px-3 py-1.5 rounded-xl transition-colors cursor-pointer whitespace-nowrap"
+            >
+              Cerrar sesión
+            </button>
+          </form>
+        </div>
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-8">
