@@ -26,6 +26,13 @@ export default function ExerciseForm() {
 
     const formData = new FormData(e.currentTarget);
 
+    const title = String(formData.get("title") ?? "").trim();
+    const description = String(formData.get("description") ?? "").trim();
+    if (!title || !description) {
+      setError("Completá el nombre y la descripción del ejercicio.");
+      return;
+    }
+
     if (videoMode === "file") {
       const file = formData.get("videoFile") as File | null;
       if (!file || file.size === 0) {
