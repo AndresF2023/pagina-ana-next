@@ -2,16 +2,12 @@ import { getExercises } from "./actions";
 import { signOut } from "./login/actions";
 import ExerciseForm from "@/components/ExerciseForm";
 import ExerciseList from "@/components/ExerciseList";
-import { createClient } from "@/utils/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   let exercises: Awaited<ReturnType<typeof getExercises>> = [];
   let dbError: string | null = null;
-
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
 
   try {
     exercises = await getExercises();
