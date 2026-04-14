@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useTransition } from "react";
+import { useCallback, useRef, useState, useTransition } from "react";
 import { deleteExercise, updateNotes } from "@/app/actions";
 import { getEmbedUrl, getYouTubeThumbnail, isDirectVideo } from "@/lib/video";
 import type { Exercise } from "@/lib/types";
@@ -18,22 +18,26 @@ function debounce<T extends (...args: Parameters<T>) => void>(fn: T, ms: number)
 }
 
 export default function ExerciseCard({ exercise }: Props) {
-  const [isPending, startTransition] = useTransition();
+  const [isDeletePending, startDeleteTransition] = useTransition();
+  const [isNotesPending, startNotesTransition] = useTransition();
+  const [notesSaved, setNotesSaved] = useState(false);
   const embedUrl = getEmbedUrl(exercise.videoUrl);
   const thumbnailUrl = getYouTubeThumbnail(exercise.videoUrl);
   const directVideo = isDirectVideo(exercise.videoUrl);
 
   const debouncedSave = useRef(
     debounce((notes: string) => {
-      startTransition(() => {
-        updateNotes(exercise.id, notes);
+      startNotesTransition(async () => {
+        await updateNotes(exercise.id, notes);
+        setNotesSaved(true);
+        setTimeout(() => setNotesSaved(false), 2000);
       });
     }, 450)
   ).current;
 
   const handleDelete = useCallback(() => {
     if (!confirm(`¿Eliminar "${exercise.title}"?`)) return;
-    startTransition(() => {
+    startDeleteTransition(() => {
       deleteExercise(exercise.id);
     });
   }, [exercise.id, exercise.title]);
@@ -81,9 +85,17 @@ export default function ExerciseCard({ exercise }: Props) {
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-slate-700">
-            Indicaciones para este ejercicio
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-slate-700">
+              Indicaciones para este ejercicio
+            </label>
+            {isNotesPending && (
+              <span className="text-xs text-slate-400">Guardando...</span>
+            )}
+            {notesSaved && !isNotesPending && (
+              <span className="text-xs text-green-600">Guardado</span>
+            )}
+          </div>
           <textarea
             defaultValue={exercise.notes}
             rows={4}
@@ -105,10 +117,10 @@ export default function ExerciseCard({ exercise }: Props) {
           <button
             type="button"
             onClick={handleDelete}
-            disabled={isPending}
+            disabled={isDeletePending}
             className="text-sm text-red-600 hover:text-red-700 hover:underline disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed ml-auto"
           >
-            {isPending ? "Eliminando..." : "Eliminar"}
+            {isDeletePending ? "Eliminando..." : "Eliminar"}
           </button>
         </div>
       </div>

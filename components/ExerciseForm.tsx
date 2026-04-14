@@ -6,6 +6,9 @@ import { createClient } from "@/utils/supabase/client";
 
 type VideoMode = "url" | "file";
 
+const MAX_FILE_SIZE_MB = 200;
+const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024;
+
 export default function ExerciseForm() {
   const formRef = useRef<HTMLFormElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -26,6 +29,10 @@ export default function ExerciseForm() {
       const file = formData.get("videoFile") as File | null;
       if (!file || file.size === 0) {
         setError("Seleccioná un archivo de video antes de guardar.");
+        return;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        setError(`El video no puede superar los ${MAX_FILE_SIZE_MB} MB.`);
         return;
       }
 

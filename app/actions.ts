@@ -17,6 +17,11 @@ function mapRow(row: ExerciseRow): Exercise {
   };
 }
 
+function toDbError(error: { message: string }, fallback: string): Error {
+  console.error("[DB]", error.message);
+  return new Error(fallback);
+}
+
 export async function getExercises(): Promise<Exercise[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -24,7 +29,7 @@ export async function getExercises(): Promise<Exercise[]> {
     .select("id, title, description, video_url, notes, created_at")
     .order("created_at", { ascending: false });
 
-  if (error) throw new Error(error.message);
+  if (error) throw toDbError(error, "Error al cargar los ejercicios.");
   return (data as ExerciseRow[]).map(mapRow);
 }
 
@@ -37,6 +42,12 @@ export async function createExercise(formData: FormData): Promise<void> {
     throw new Error("Completa todos los campos.");
   }
 
+  try {
+    new URL(videoUrl);
+  } catch {
+    throw new Error("La URL del video no es válida.");
+  }
+
   const supabase = await createClient();
   const { error } = await supabase.from(TABLE).insert({
     title,
@@ -45,14 +56,14 @@ export async function createExercise(formData: FormData): Promise<void> {
     notes: "",
   });
 
-  if (error) throw new Error(error.message);
+  if (error) throw toDbError(error, "Error al guardar el ejercicio.");
   revalidatePath("/");
 }
 
 export async function deleteExercise(id: string): Promise<void> {
   const supabase = await createClient();
   const { error } = await supabase.from(TABLE).delete().eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) throw toDbError(error, "Error al eliminar el ejercicio.");
   revalidatePath("/");
 }
 
@@ -62,5 +73,6 @@ export async function updateNotes(id: string, notes: string): Promise<void> {
     .from(TABLE)
     .update({ notes })
     .eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) throw toDbError(error, "Error al guardar las indicaciones.");
+  revalidatePath("/");
 }
