@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useTransition } from "react";
 import { signIn } from "./actions";
 
@@ -22,7 +23,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-8">
         <div className="text-center mb-8">
-          <img src="/club.png" alt="Logo Club" className="w-20 h-20 rounded-full mx-auto mb-3" />
+          <Image src="/club.png" alt="Logo Club" width={80} height={80} className="rounded-full mx-auto mb-3" />
           <h1 className="text-xl font-bold text-slate-800">Tenis del 9</h1>
           <p className="text-slate-500 text-sm mt-1">Ingresá con tu cuenta</p>
         </div>
