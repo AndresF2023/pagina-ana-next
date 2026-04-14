@@ -23,7 +23,7 @@ function mapRow(row: ExerciseRow): Exercise {
 
 function toDbError(error: { message: string }, fallback: string): Error {
   console.error("[DB]", error.message);
-  return new Error(fallback);
+  return new Error(`${fallback} (${error.message})`);
 }
 
 export async function getExercises(): Promise<Exercise[]> {
