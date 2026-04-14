@@ -19,11 +19,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-green-500 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-8">
         <div className="text-center mb-8">
           <div className="text-4xl mb-3">🎾</div>
-          <h1 className="text-xl font-bold text-slate-800">Ejercicios de Tenis</h1>
+          <h1 className="text-xl font-bold text-slate-800">Tenis del 9</h1>
           <p className="text-slate-500 text-sm mt-1">Ingresá con tu cuenta</p>
         </div>
 
@@ -39,7 +39,7 @@ export default function LoginPage() {
               autoComplete="email"
               required
               placeholder="tucorreo@ejemplo.com"
-              className="border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+              className="border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
             />
           </div>
 
@@ -54,7 +54,7 @@ export default function LoginPage() {
               autoComplete="current-password"
               required
               placeholder="••••••••"
-              className="border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+              className="border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
             />
           </div>
 
@@ -67,7 +67,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isPending}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2.5 rounded-xl transition-colors cursor-pointer disabled:cursor-not-allowed mt-1"
+            className="bg-sky-600 hover:bg-sky-700 disabled:bg-sky-400 text-white font-medium py-2.5 rounded-xl transition-colors cursor-pointer disabled:cursor-not-allowed mt-1"
           >
             {isPending ? "Ingresando..." : "Ingresar"}
           </button>
