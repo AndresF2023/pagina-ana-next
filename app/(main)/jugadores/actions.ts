@@ -206,48 +206,62 @@ export async function deleteBienestar(id: string, jugadorId: string): Promise<vo
 
 // ── Cuentas de acceso ──────────────────────────────────────────────────────
 
-export async function createPlayerAccount(jugadorId: string, email: string, password: string): Promise<void> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.user_metadata?.role === "jugador") throw new Error("No autorizado.");
+export async function createPlayerAccount(
+  jugadorId: string,
+  email: string,
+  password: string
+): Promise<{ error: string } | null> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || user.user_metadata?.role === "jugador") return { error: "No autorizado." };
 
-  const admin = createAdminClient();
-  const { data, error } = await admin.auth.admin.createUser({
-    email,
-    password,
-    user_metadata: { role: "jugador", jugador_id: jugadorId },
-    email_confirm: true,
-  });
-  if (error) throw new Error(`Error al crear la cuenta: ${error.message}`);
+    const admin = createAdminClient();
+    const { data, error } = await admin.auth.admin.createUser({
+      email,
+      password,
+      user_metadata: { role: "jugador", jugador_id: jugadorId },
+      email_confirm: true,
+    });
+    if (error) return { error: `Error al crear la cuenta: ${error.message}` };
 
-  const { error: updateError } = await supabase
-    .from("jugadores")
-    .update({ user_id: data.user.id })
-    .eq("id", jugadorId);
+    const { error: updateError } = await supabase
+      .from("jugadores")
+      .update({ user_id: data.user.id })
+      .eq("id", jugadorId);
 
-  if (updateError) {
-    await admin.auth.admin.deleteUser(data.user.id);
-    throw new Error("Error al vincular la cuenta.");
+    if (updateError) {
+      await admin.auth.admin.deleteUser(data.user.id);
+      return { error: "Error al vincular la cuenta con el jugador." };
+    }
+
+    revalidatePath(`/jugadores/${jugadorId}`);
+    return null;
+  } catch {
+    return { error: "Error inesperado al crear la cuenta." };
   }
-
-  revalidatePath(`/jugadores/${jugadorId}`);
 }
 
-export async function deletePlayerAccount(jugadorId: string): Promise<void> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.user_metadata?.role === "jugador") throw new Error("No autorizado.");
+export async function deletePlayerAccount(jugadorId: string): Promise<{ error: string } | null> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || user.user_metadata?.role === "jugador") return { error: "No autorizado." };
 
-  const { data: jugador } = await supabase
-    .from("jugadores")
-    .select("user_id")
-    .eq("id", jugadorId)
-    .single();
+    const { data: jugador } = await supabase
+      .from("jugadores")
+      .select("user_id")
+      .eq("id", jugadorId)
+      .single();
 
-  if (!jugador?.user_id) throw new Error("Este jugador no tiene cuenta activa.");
+    if (!jugador?.user_id) return { error: "Este jugador no tiene cuenta activa." };
 
-  await supabase.from("jugadores").update({ user_id: null }).eq("id", jugadorId);
-  await createAdminClient().auth.admin.deleteUser(jugador.user_id);
+    await supabase.from("jugadores").update({ user_id: null }).eq("id", jugadorId);
+    await createAdminClient().auth.admin.deleteUser(jugador.user_id);
 
-  revalidatePath(`/jugadores/${jugadorId}`);
+    revalidatePath(`/jugadores/${jugadorId}`);
+    return null;
+  } catch {
+    return { error: "Error inesperado al revocar el acceso." };
+  }
 }

@@ -333,13 +333,13 @@ export default function JugadorDetail({
     const password = String(formData.get("password") ?? "");
     if (!email || !password) { setAccountError("Completá email y contraseña."); return; }
     startAccountTransition(async () => {
-      try {
-        await createPlayerAccount(jugador.id, email, password);
+      const result = await createPlayerAccount(jugador.id, email, password);
+      if (result?.error) {
+        setAccountError(result.error);
+      } else {
         setHasAccount(true);
         setAccountSuccess(`Cuenta creada para ${email}`);
         accountFormRef.current?.reset();
-      } catch (err) {
-        setAccountError(err instanceof Error ? err.message : "Error al crear la cuenta.");
       }
     });
   }
@@ -347,11 +347,11 @@ export default function JugadorDetail({
   function handleDeleteAccount() {
     setAccountError(null); setAccountSuccess(null);
     startAccountTransition(async () => {
-      try {
-        await deletePlayerAccount(jugador.id);
+      const result = await deletePlayerAccount(jugador.id);
+      if (result?.error) {
+        setAccountError(result.error);
+      } else {
         setHasAccount(false);
-      } catch (err) {
-        setAccountError(err instanceof Error ? err.message : "Error al revocar el acceso.");
       }
     });
   }
