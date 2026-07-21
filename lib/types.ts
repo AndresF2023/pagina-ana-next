@@ -44,6 +44,12 @@ export interface Jugador {
   apellido: string;
   perfil: string;
   correcciones_tecnicas: string;
+  objetivos: string;
+  modelos_a_seguir: string;
+  identidad_conceptual: string;
+  identidad_ejecutoria: string;
+  estilo_caracteristicas: string;
+  estilo_patrones: string;
   created_at: string;
   user_id?: string | null;
 }
@@ -54,6 +60,35 @@ export interface Torneo {
   nombre: string;
   fecha: string;
   lugar: string;
+  created_at: string;
+}
+
+export interface Evaluacion {
+  id: string;
+  jugador_id: string;
+  nombre: string;
+  fecha: string;
+  pdf_url: string;
+  created_at: string;
+}
+
+export type EstadoAsistencia = "presente" | "ausente" | "tarde";
+
+export interface Asistencia {
+  id: string;
+  jugador_id: string;
+  fecha: string;
+  estado: EstadoAsistencia;
+  nota: string;
+  created_at: string;
+}
+
+export interface Bienestar {
+  id: string;
+  jugador_id: string;
+  fecha: string;
+  valor: number;
+  nota: string;
   created_at: string;
 }
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getJugador, getTorneos } from "../actions";
+import { getJugador, getTorneos, getEvaluaciones, getAsistencias, getBienestar } from "../actions";
 import JugadorDetail from "@/components/JugadorDetail";
 import { createClient } from "@/utils/supabase/server";
 
@@ -12,7 +12,13 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
   const { data: { user } } = await supabase.auth.getUser();
   const isStaff = user?.user_metadata?.role !== "jugador";
 
-  const [jugador, torneos] = await Promise.all([getJugador(id), getTorneos(id)]);
+  const [jugador, torneos, evaluaciones, asistencias, bienestar] = await Promise.all([
+    getJugador(id),
+    getTorneos(id),
+    getEvaluaciones(id),
+    getAsistencias(id),
+    getBienestar(id),
+  ]);
 
   if (!jugador) notFound();
 
@@ -29,7 +35,14 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
         </h1>
       </div>
 
-      <JugadorDetail jugador={jugador} torneos={torneos} isStaff={isStaff} />
+      <JugadorDetail
+        jugador={jugador}
+        torneos={torneos}
+        evaluaciones={evaluaciones}
+        asistencias={asistencias}
+        bienestar={bienestar}
+        isStaff={isStaff}
+      />
     </>
   );
 }
