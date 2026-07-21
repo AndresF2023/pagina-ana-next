@@ -217,21 +217,43 @@ export async function createPlayerAccount(
     if (!user || user.user_metadata?.role === "jugador") return { error: "No autorizado." };
 
     const admin = createAdminClient();
+
+    // Intentar crear el usuario; si el email ya existe, buscarlo y reutilizarlo
+    let authUserId: string;
     const { data, error } = await admin.auth.admin.createUser({
       email,
       password,
       user_metadata: { role: "jugador", jugador_id: jugadorId },
       email_confirm: true,
     });
-    if (error) return { error: `Error al crear la cuenta: ${error.message}` };
+
+    if (error) {
+      if (!error.message.includes("already been registered")) {
+        return { error: `Error al crear la cuenta: ${error.message}` };
+      }
+      // Email ya existe → buscar el usuario y reutilizarlo
+      const { data: listData, error: listError } = await admin.auth.admin.listUsers();
+      if (listError) return { error: "Error al verificar el usuario existente." };
+      const existing = listData.users.find((u) => u.email === email);
+      if (!existing) return { error: "No se pudo encontrar el usuario existente." };
+      // Actualizar sus metadatos para vincularlo al nuevo jugador
+      const { error: updateAuthError } = await admin.auth.admin.updateUserById(existing.id, {
+        password,
+        user_metadata: { role: "jugador", jugador_id: jugadorId },
+      });
+      if (updateAuthError) return { error: `Error al actualizar la cuenta: ${updateAuthError.message}` };
+      authUserId = existing.id;
+    } else {
+      authUserId = data.user.id;
+    }
 
     const { error: updateError } = await supabase
       .from("jugadores")
-      .update({ user_id: data.user.id })
+      .update({ user_id: authUserId })
       .eq("id", jugadorId);
 
     if (updateError) {
-      await admin.auth.admin.deleteUser(data.user.id);
+      if (!error) await admin.auth.admin.deleteUser(authUserId);
       return { error: "Error al vincular la cuenta con el jugador." };
     }
 
