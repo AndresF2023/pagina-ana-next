@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import Nav from "@/components/Nav";
+import JugadorNav from "@/components/JugadorNav";
 import SignOutButton from "@/components/SignOutButton";
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
@@ -16,7 +17,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
             <img src="/club.png" alt="Logo Club" width={44} height={44} className="rounded-full" />
             <span className="text-2xl font-bold">Tenis del 9</span>
           </div>
-          {isStaff && <Nav />}
+          {isStaff ? <Nav /> : <JugadorNav />}
           <SignOutButton />
         </div>
       </header>

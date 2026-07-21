@@ -296,7 +296,7 @@ export default function JugadorDetail({
     <div className="flex flex-col gap-8">
 
       {/* ── Perfil ── */}
-      <div className={card}>
+      <div id="perfil" className={card}>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-semibold text-slate-800">Perfil del jugador/a</h2>
           {isStaff && perfilSaved && <span className="text-xs text-green-600">Guardado</span>}
@@ -328,7 +328,7 @@ export default function JugadorDetail({
       )}
 
       {/* ── Objetivos ── */}
-      <div className={card}>
+      <div id="objetivos" className={card}>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-semibold text-slate-800">Objetivos</h2>
           {isStaff && objetivosSaved && <span className="text-xs text-green-600">Guardado</span>}
@@ -346,7 +346,7 @@ export default function JugadorDetail({
       </div>
 
       {/* ── Modelos a seguir ── */}
-      <div className={card}>
+      <div id="modelos" className={card}>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-semibold text-slate-800">Modelos a seguir</h2>
           {isStaff && modelosSaved && <span className="text-xs text-green-600">Guardado</span>}
@@ -364,7 +364,7 @@ export default function JugadorDetail({
       </div>
 
       {/* ── Identidad conceptual ── */}
-      <div className={card}>
+      <div id="identidad" className={card}>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-semibold text-slate-800">Identidad conceptual</h2>
           {isStaff && identidadConceptualSaved && <span className="text-xs text-green-600">Guardado</span>}
@@ -400,7 +400,7 @@ export default function JugadorDetail({
       </div>
 
       {/* ── Estilo de juego ── */}
-      <div className={card}>
+      <div id="estilo" className={card}>
         <h2 className="text-base font-semibold text-slate-800 mb-4">Estilo de juego</h2>
         <div className="flex flex-col gap-4">
           <div>
@@ -439,7 +439,7 @@ export default function JugadorDetail({
       </div>
 
       {/* ── Evaluaciones físicas/kinésicas ── */}
-      <div className={card}>
+      <div id="evaluaciones" className={card}>
         <h2 className="text-base font-semibold text-slate-800 mb-4">Evaluaciones físicas/kinésicas</h2>
 
         {isStaff && (
@@ -502,7 +502,7 @@ export default function JugadorDetail({
       </div>
 
       {/* ── Asistencias ── */}
-      <div className={card}>
+      <div id="asistencias" className={card}>
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <h2 className="text-base font-semibold text-slate-800">Asistencias</h2>
           <div className="flex gap-1 p-1 bg-slate-100 rounded-xl">
@@ -651,7 +651,7 @@ export default function JugadorDetail({
       </div>
 
       {/* ── Bienestar subjetivo ── */}
-      <div className={card}>
+      <div id="bienestar" className={card}>
         <h2 className="text-base font-semibold text-slate-800 mb-4">Bienestar subjetivo</h2>
 
         {isStaff && (
@@ -721,7 +721,7 @@ export default function JugadorDetail({
       </div>
 
       {/* ── Calendario de torneos ── */}
-      <div className={card}>
+      <div id="torneos" className={card}>
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <h2 className="text-base font-semibold text-slate-800">Calendario de torneos</h2>
           <div className="flex gap-1 p-1 bg-slate-100 rounded-xl">
