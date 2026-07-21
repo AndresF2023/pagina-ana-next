@@ -24,5 +24,10 @@ export async function signIn(formData: FormData): Promise<{ error: string } | ne
 export async function signOut(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
+}
+
+export async function signOutAndRedirect(): Promise<never> {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
   redirect("/login");
 }

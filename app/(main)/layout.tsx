@@ -1,6 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
-import { signOut } from "@/app/login/actions";
 import Nav from "@/components/Nav";
+import SignOutButton from "@/components/SignOutButton";
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -17,14 +17,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
             <span className="text-2xl font-bold">Tenis del 9</span>
           </div>
           {isStaff && <Nav />}
-          <form action={signOut}>
-            <button
-              type="submit"
-              className="text-sm text-white/80 hover:text-white border border-white/30 hover:border-white/60 px-3 py-1.5 rounded-xl transition-colors cursor-pointer whitespace-nowrap"
-            >
-              Cerrar sesión
-            </button>
-          </form>
+          <SignOutButton />
         </div>
       </header>
       <main className="max-w-5xl mx-auto px-4 py-8">
