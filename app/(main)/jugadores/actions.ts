@@ -165,7 +165,7 @@ export async function getBienestar(jugadorId: string): Promise<Bienestar[]> {
     .select("*")
     .eq("jugador_id", jugadorId)
     .order("fecha", { ascending: false });
-  if (error) throw new Error("Error al cargar el bienestar.");
+  if (error) return [];
   return data as Bienestar[];
 }
 
