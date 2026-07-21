@@ -73,7 +73,7 @@ export interface Evaluacion {
   created_at: string;
 }
 
-export type EstadoAsistencia = "presente" | "ausente" | "tarde";
+export type EstadoAsistencia = "presente" | "ausente" | "tarde" | "competencia";
 
 export interface Asistencia {
   id: string;

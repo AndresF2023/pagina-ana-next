@@ -23,15 +23,17 @@ function formatFecha(fecha: string) {
 }
 
 const ESTADO_STYLES: Record<EstadoAsistencia, string> = {
-  presente: "bg-green-100 text-green-700",
-  ausente: "bg-red-100 text-red-700",
-  tarde: "bg-amber-100 text-amber-700",
+  presente:    "bg-green-100 text-green-700",
+  ausente:     "bg-red-100 text-red-700",
+  tarde:       "bg-amber-100 text-amber-700",
+  competencia: "bg-blue-100 text-blue-700",
 };
 
 const ESTADO_LABELS: Record<EstadoAsistencia, string> = {
-  presente: "Presente",
-  ausente: "Ausente",
-  tarde: "Tarde",
+  presente:    "Presente",
+  ausente:     "Ausente",
+  tarde:       "Tarde",
+  competencia: "Competencia",
 };
 
 function bienestarColor(v: number) {
@@ -541,6 +543,7 @@ export default function JugadorDetail({
                   <option value="presente">Presente</option>
                   <option value="ausente">Ausente</option>
                   <option value="tarde">Tarde</option>
+                  <option value="competencia">Competencia</option>
                 </select>
               </div>
               <div className="flex flex-col gap-1 flex-1">
@@ -626,10 +629,10 @@ export default function JugadorDetail({
                     );
                   })}
                 </div>
-                <div className="flex gap-4 px-5 py-3 border-t border-slate-100">
-                  {(["presente","ausente","tarde"] as EstadoAsistencia[]).map(e => (
+                <div className="flex flex-wrap gap-3 px-5 py-3 border-t border-slate-100">
+                  {(["presente","ausente","tarde","competencia"] as EstadoAsistencia[]).map(e => (
                     <div key={e} className="flex items-center gap-1.5">
-                      <span className={`w-2 h-2 rounded-full ${e === "presente" ? "bg-green-500" : e === "ausente" ? "bg-red-500" : "bg-amber-500"}`} />
+                      <span className={`w-2 h-2 rounded-full ${e === "presente" ? "bg-green-500" : e === "ausente" ? "bg-red-500" : e === "tarde" ? "bg-amber-500" : "bg-blue-500"}`} />
                       <span className="text-xs text-slate-500">{ESTADO_LABELS[e]}</span>
                     </div>
                   ))}
