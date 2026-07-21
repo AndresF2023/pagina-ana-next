@@ -364,26 +364,6 @@ export default function JugadorDetail({
   return (
     <div className="flex flex-col gap-8">
 
-      {/* ── Perfil ── */}
-      {mostrar("perfil") && (
-        <div id="perfil" className={card}>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-semibold text-slate-800">Perfil del jugador/a</h2>
-            {isStaff && perfilSaved && <span className="text-xs text-green-600">Guardado</span>}
-          </div>
-          {isStaff ? (
-            <textarea defaultValue={jugador.perfil} rows={4}
-              placeholder="Descripción general del jugador/a, estilo de juego, nivel..."
-              onChange={(e) => debouncedSavePerfil(e.target.value)}
-              className={`w-full ${inputClass} resize-none`} />
-          ) : (
-            <p className="text-sm text-slate-700 whitespace-pre-wrap">
-              {jugador.perfil || <span className="text-slate-400 italic">Sin información.</span>}
-            </p>
-          )}
-        </div>
-      )}
-
       {/* ── Correcciones técnicas y biomecánicas (solo staff) ── */}
       {isStaff && mostrar("correcciones") && (
         <div className={card}>
