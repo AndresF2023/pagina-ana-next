@@ -178,30 +178,39 @@ export async function addBienestar(
   calidad_sueno: number,
   nota_sueno: string,
   estado_animico: number
-): Promise<void> {
-  if (!fecha) throw new Error("Seleccioná una fecha.");
-  const supabase = await createClient();
-  const { error } = await supabase.from("bienestar").insert({
-    jugador_id: jugadorId,
-    fecha,
-    valor: 0,
-    nota: "",
-    fatiga,
-    dolor_muscular,
-    nota_dolor,
-    calidad_sueno,
-    nota_sueno,
-    estado_animico,
-  });
-  if (error) throw new Error("Error al guardar el bienestar.");
-  revalidatePath(`/jugadores/${jugadorId}`);
+): Promise<{ error: string } | null> {
+  try {
+    if (!fecha) return { error: "Seleccioná una fecha." };
+    const supabase = await createClient();
+    const { error } = await supabase.from("bienestar").insert({
+      jugador_id: jugadorId,
+      fecha,
+      valor: 0,
+      nota: "",
+      fatiga,
+      dolor_muscular,
+      nota_dolor,
+      calidad_sueno,
+      nota_sueno,
+      estado_animico,
+    });
+    if (error) return { error: "Error al guardar el bienestar." };
+    revalidatePath(`/jugadores/${jugadorId}`);
+    return null;
+  } catch {
+    return { error: "Error inesperado al guardar el bienestar." };
+  }
 }
 
 export async function deleteBienestar(id: string, jugadorId: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase.from("bienestar").delete().eq("id", id);
-  if (error) throw new Error("Error al eliminar el registro.");
-  revalidatePath(`/jugadores/${jugadorId}`);
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.from("bienestar").delete().eq("id", id);
+    if (error) console.error("Error al eliminar bienestar:", error);
+    revalidatePath(`/jugadores/${jugadorId}`);
+  } catch {
+    // no propagamos el error para no crashear la UI
+  }
 }
 
 // ── Cuentas de acceso ──────────────────────────────────────────────────────

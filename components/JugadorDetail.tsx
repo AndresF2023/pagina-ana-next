@@ -287,8 +287,10 @@ export default function JugadorDetail({
     if (!bAnimico) { setBienestarError("Indicá tu estado anímico."); return; }
 
     startBienestarTransition(async () => {
-      try {
-        await addBienestar(jugador.id, fecha, bFatiga, bDolor, nota_dolor, bSueno, nota_sueno, bAnimico);
+      const result = await addBienestar(jugador.id, fecha, bFatiga, bDolor, nota_dolor, bSueno, nota_sueno, bAnimico);
+      if (result?.error) {
+        setBienestarError(result.error);
+      } else {
         bienestarFormRef.current?.reset();
         setBFatiga(null); setBDolor(null); setBSueno(null); setBAnimico(null);
         setBienestarList(prev => [{
@@ -305,8 +307,6 @@ export default function JugadorDetail({
           estado_animico: bAnimico,
           created_at: new Date().toISOString(),
         }, ...prev]);
-      } catch (err) {
-        setBienestarError(err instanceof Error ? err.message : "Error al guardar.");
       }
     });
   }
