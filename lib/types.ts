@@ -44,6 +44,8 @@ export interface Jugador {
   apellido: string;
   perfil: string;
   correcciones_tecnicas: string;
+  correcciones_video_url: string;
+  correcciones_image_urls: string[];
   objetivos: string;
   modelos_a_seguir: string;
   identidad_conceptual: string;

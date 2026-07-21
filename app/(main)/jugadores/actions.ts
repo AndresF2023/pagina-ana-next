@@ -57,6 +57,25 @@ export async function updateJugador(
   revalidatePath(`/jugadores/${id}`);
 }
 
+export async function updateCorreccionesMedia(
+  jugadorId: string,
+  videoUrl: string,
+  imageUrls: string[]
+): Promise<{ error: string } | null> {
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("jugadores")
+      .update({ correcciones_video_url: videoUrl, correcciones_image_urls: imageUrls })
+      .eq("id", jugadorId);
+    if (error) return { error: "Error al guardar los archivos." };
+    revalidatePath(`/jugadores/${jugadorId}`);
+    return null;
+  } catch {
+    return { error: "Error inesperado al guardar." };
+  }
+}
+
 // ── Torneos ────────────────────────────────────────────────────────────────
 
 export async function getTorneos(jugadorId: string): Promise<Torneo[]> {

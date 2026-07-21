@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import {
   updateJugador,
+  updateCorreccionesMedia,
   addTorneo, deleteTorneo,
   addEvaluacion, deleteEvaluacion,
   addAsistencia, deleteAsistencia,
@@ -10,6 +11,7 @@ import {
   createPlayerAccount, deletePlayerAccount,
 } from "@/app/(main)/jugadores/actions";
 import { createClient } from "@/utils/supabase/client";
+import { getEmbedUrl, isDirectVideo } from "@/lib/video";
 import { CATEGORIES } from "@/lib/types";
 import type { Jugador, Torneo, Evaluacion, Asistencia, EstadoAsistencia, Bienestar } from "@/lib/types";
 
@@ -167,6 +169,94 @@ export default function JugadorDetail({
   const debouncedSaveEstiloPatrones = useRef(debounce((v: string) => {
     updateJugador(jugador.id, "estilo_patrones", v).then(() => { setEstiloPatronesSaved(true); setTimeout(() => setEstiloPatronesSaved(false), 2000); });
   }, 450)).current;
+
+  // ── Correcciones multimedia ───────────────────────────────────────────────
+  const [cVideoUrl, setCVideoUrl] = useState(jugador.correcciones_video_url ?? "");
+  const [cImageUrls, setCImageUrls] = useState<string[]>(jugador.correcciones_image_urls ?? []);
+  const [cShowAdd, setCShowAdd] = useState(false);
+  const [cMediaTab, setCMediaTab] = useState<"video" | "fotos">("video");
+  const [cVideoMode, setCVideoMode] = useState<"url" | "file">("url");
+  const [cVideoInput, setCVideoInput] = useState("");
+  const [cSelectedVideoFile, setCSelectedVideoFile] = useState<string | null>(null);
+  const [cSelectedImages, setCSelectedImages] = useState<File[]>([]);
+  const [cImagePreviews, setCImagePreviews] = useState<string[]>([]);
+  const [cUploading, setCUploading] = useState(false);
+  const [cMediaError, setCMediaError] = useState<string | null>(null);
+
+  async function handleSaveCorreccionVideo() {
+    const url = cVideoInput.trim();
+    if (!url) { setCMediaError("Ingresá una URL de video."); return; }
+    setCMediaError(null);
+    const result = await updateCorreccionesMedia(jugador.id, url, cImageUrls);
+    if (result?.error) { setCMediaError(result.error); return; }
+    setCVideoUrl(url);
+    setCVideoInput("");
+    setCShowAdd(false);
+  }
+
+  async function handleUploadCorreccionVideo(file: File) {
+    if (file.size > 200 * 1024 * 1024) { setCMediaError("El video no puede superar los 200 MB."); return; }
+    setCUploading(true);
+    setCMediaError(null);
+    try {
+      const supabase = createClient();
+      const ext = file.name.split(".").pop() ?? "mp4";
+      const filename = `corr-video-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from("videos").upload(filename, file, { contentType: file.type });
+      if (error) throw new Error(error.message);
+      const { data: { publicUrl } } = supabase.storage.from("videos").getPublicUrl(filename);
+      const result = await updateCorreccionesMedia(jugador.id, publicUrl, cImageUrls);
+      if (result?.error) { setCMediaError(result.error); return; }
+      setCVideoUrl(publicUrl);
+      setCSelectedVideoFile(null);
+      setCShowAdd(false);
+    } catch (err) {
+      setCMediaError(err instanceof Error ? err.message : "Error al subir el video.");
+    } finally {
+      setCUploading(false);
+    }
+  }
+
+  async function handleUploadCorreccionFotos() {
+    if (cSelectedImages.length === 0) { setCMediaError("Seleccioná al menos una foto."); return; }
+    setCUploading(true);
+    setCMediaError(null);
+    try {
+      const supabase = createClient();
+      const newUrls: string[] = [];
+      for (const file of cSelectedImages) {
+        if (file.size > 10 * 1024 * 1024) throw new Error("Cada foto no puede superar los 10 MB.");
+        const ext = file.name.split(".").pop() ?? "jpg";
+        const filename = `corr-img-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error } = await supabase.storage.from("videos").upload(filename, file, { contentType: file.type });
+        if (error) throw new Error(error.message);
+        const { data: { publicUrl } } = supabase.storage.from("videos").getPublicUrl(filename);
+        newUrls.push(publicUrl);
+      }
+      const merged = [...cImageUrls, ...newUrls];
+      const result = await updateCorreccionesMedia(jugador.id, cVideoUrl, merged);
+      if (result?.error) { setCMediaError(result.error); return; }
+      setCImageUrls(merged);
+      setCSelectedImages([]);
+      setCImagePreviews([]);
+      setCShowAdd(false);
+    } catch (err) {
+      setCMediaError(err instanceof Error ? err.message : "Error al subir las fotos.");
+    } finally {
+      setCUploading(false);
+    }
+  }
+
+  async function handleDeleteCorreccionVideo() {
+    const result = await updateCorreccionesMedia(jugador.id, "", cImageUrls);
+    if (!result?.error) setCVideoUrl("");
+  }
+
+  async function handleDeleteCorreccionImagen(url: string) {
+    const updated = cImageUrls.filter((u) => u !== url);
+    const result = await updateCorreccionesMedia(jugador.id, cVideoUrl, updated);
+    if (!result?.error) setCImageUrls(updated);
+  }
 
   // ── Evaluaciones ──────────────────────────────────────────────────────────
   const [evalList, setEvalList] = useState(evaluaciones);
@@ -374,7 +464,176 @@ export default function JugadorDetail({
           <textarea defaultValue={jugador.correcciones_tecnicas} rows={4}
             placeholder="Aspectos técnicos a trabajar, correcciones pendientes..."
             onChange={(e) => debouncedSaveCorrecciones(e.target.value)}
-            className={`w-full ${inputClass} resize-none`} />
+            className={`w-full ${inputClass} resize-none mb-4`} />
+
+          {/* Video guardado */}
+          {cVideoUrl && (() => {
+            const embedUrl = getEmbedUrl(cVideoUrl);
+            const direct = isDirectVideo(cVideoUrl);
+            return (
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-slate-700">Video</span>
+                  <button type="button" onClick={handleDeleteCorreccionVideo}
+                    className="text-xs text-red-500 hover:text-red-700 hover:underline cursor-pointer">
+                    Eliminar video
+                  </button>
+                </div>
+                <div className="aspect-video bg-black rounded-xl overflow-hidden">
+                  {direct ? (
+                    <video src={cVideoUrl} controls className="w-full h-full object-contain" />
+                  ) : embedUrl ? (
+                    <iframe src={embedUrl} allowFullScreen
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      className="w-full h-full border-0" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <a href={cVideoUrl} target="_blank" rel="noopener noreferrer"
+                        className="text-sm text-sky-400 hover:underline">Abrir video ↗</a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Fotos guardadas */}
+          {cImageUrls.length > 0 && (
+            <div className="mb-4">
+              <span className="text-sm font-medium text-slate-700 block mb-2">Fotos ({cImageUrls.length})</span>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {cImageUrls.map((url, i) => (
+                  <div key={i} className="relative group aspect-square">
+                    <img src={url} alt={`Corrección ${i + 1}`}
+                      className="w-full h-full object-cover rounded-xl border border-slate-200" />
+                    <button type="button" onClick={() => handleDeleteCorreccionImagen(url)}
+                      className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Agregar multimedia */}
+          {!cShowAdd ? (
+            <button type="button" onClick={() => { setCShowAdd(true); setCMediaError(null); }}
+              className="text-sm text-sky-600 hover:text-sky-700 hover:underline cursor-pointer">
+              + Agregar {cVideoUrl ? "fotos" : "video o fotos"}
+            </button>
+          ) : (
+            <div className="border border-slate-200 rounded-xl p-4 flex flex-col gap-4">
+              {/* Tabs */}
+              <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-fit">
+                {(["video", "fotos"] as const).map((tab) => (
+                  <button key={tab} type="button" onClick={() => { setCMediaTab(tab); setCMediaError(null); }}
+                    className={`text-sm px-4 py-1.5 rounded-lg transition-colors capitalize ${cMediaTab === tab ? "bg-white text-slate-800 shadow-sm font-medium" : "text-slate-500 hover:text-slate-700"}`}>
+                    {tab === "video" ? "Video" : "Fotos"}
+                  </button>
+                ))}
+              </div>
+
+              {/* Video */}
+              {cMediaTab === "video" && (
+                <div className="flex flex-col gap-3">
+                  <div className="flex gap-1 p-1 bg-slate-50 border border-slate-100 rounded-xl w-fit">
+                    {(["url", "file"] as const).map((m) => (
+                      <button key={m} type="button" onClick={() => { setCVideoMode(m); setCVideoInput(""); setCSelectedVideoFile(null); setCMediaError(null); }}
+                        className={`text-sm px-3 py-1 rounded-lg transition-colors ${cVideoMode === m ? "bg-white text-slate-800 shadow-sm font-medium" : "text-slate-500 hover:text-slate-700"}`}>
+                        {m === "url" ? "YouTube / URL" : "Subir archivo"}
+                      </button>
+                    ))}
+                  </div>
+                  {cVideoMode === "url" ? (
+                    <div className="flex gap-2">
+                      <input type="url" value={cVideoInput} onChange={(e) => setCVideoInput(e.target.value)}
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        className={`flex-1 ${inputClass}`} />
+                      <button type="button" onClick={handleSaveCorreccionVideo} disabled={cUploading}
+                        className={btnPrimary}>
+                        Guardar
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl px-4 py-5 cursor-pointer transition-colors ${cSelectedVideoFile ? "border-sky-400 bg-sky-50/40" : "border-slate-200 hover:border-sky-400 hover:bg-sky-50/40"}`}>
+                        <span className="text-sm text-slate-500">{cSelectedVideoFile ?? "Seleccioná un video"}</span>
+                        <span className="text-xs text-slate-400">MP4, MOV, WebM · máx 200 MB</span>
+                        <input type="file" accept="video/*" className="sr-only"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) { setCSelectedVideoFile(f.name); setCMediaError(null); }
+                          }} />
+                      </label>
+                      {cSelectedVideoFile && (
+                        <button type="button" disabled={cUploading}
+                          onClick={async (e) => {
+                            const input = (e.currentTarget.closest(".flex.flex-col")!).querySelector("input[type=file]") as HTMLInputElement;
+                            const file = input?.files?.[0];
+                            if (file) await handleUploadCorreccionVideo(file);
+                          }}
+                          className={btnPrimary}>
+                          {cUploading ? "Subiendo..." : "Subir video"}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Fotos */}
+              {cMediaTab === "fotos" && (
+                <div className="flex flex-col gap-3">
+                  <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl px-4 py-5 cursor-pointer transition-colors ${cSelectedImages.length > 0 ? "border-sky-400 bg-sky-50/40" : "border-slate-200 hover:border-sky-400 hover:bg-sky-50/40"}`}>
+                    <span className="text-sm text-slate-500">
+                      {cSelectedImages.length > 0 ? `${cSelectedImages.length} foto${cSelectedImages.length > 1 ? "s" : ""} seleccionada${cSelectedImages.length > 1 ? "s" : ""}` : "Seleccioná fotos"}
+                    </span>
+                    <span className="text-xs text-slate-400">JPG, PNG, WebP · máx 10 MB por foto</span>
+                    <input type="file" accept="image/*" multiple className="sr-only"
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files ?? []);
+                        setCSelectedImages(files);
+                        setCImagePreviews(files.map((f) => URL.createObjectURL(f)));
+                        setCMediaError(null);
+                      }} />
+                  </label>
+                  {cImagePreviews.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {cImagePreviews.map((src, i) => (
+                        <div key={i} className="relative group aspect-square">
+                          <img src={src} alt="" className="w-full h-full object-cover rounded-xl border border-slate-200" />
+                          <button type="button"
+                            onClick={() => {
+                              setCSelectedImages((p) => p.filter((_, j) => j !== i));
+                              setCImagePreviews((p) => p.filter((_, j) => j !== i));
+                            }}
+                            className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {cSelectedImages.length > 0 && (
+                    <button type="button" disabled={cUploading} onClick={handleUploadCorreccionFotos}
+                      className={btnPrimary}>
+                      {cUploading ? "Subiendo..." : "Subir fotos"}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {cMediaError && (
+                <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{cMediaError}</p>
+              )}
+
+              <button type="button" onClick={() => { setCShowAdd(false); setCMediaError(null); setCVideoInput(""); setCSelectedVideoFile(null); setCSelectedImages([]); setCImagePreviews([]); }}
+                className="text-sm text-slate-500 hover:text-slate-700 hover:underline self-start cursor-pointer">
+                Cancelar
+              </button>
+            </div>
+          )}
         </div>
       )}
 
