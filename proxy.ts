@@ -53,8 +53,9 @@ export async function proxy(request: NextRequest) {
     const allowedPath = `/jugadores/${jugadorId}`;
 
     if (!request.nextUrl.pathname.startsWith(allowedPath)) {
+      // Redirigir a la página menú del jugador
       const url = request.nextUrl.clone();
-      url.pathname = allowedPath;
+      url.pathname = `${allowedPath}/menu`;
       return NextResponse.redirect(url);
     }
   }
