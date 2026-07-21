@@ -419,7 +419,7 @@ export default function JugadorDetail({
       )}
 
       {/* ── Modelos a seguir ── */}
-      {mostrar("modelos") && (
+      {(isStaff || !seccion || seccion === "perfil" || seccion === "modelos") && (
         <div id="modelos" className={card}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-semibold text-slate-800">Modelos a seguir</h2>
@@ -439,7 +439,7 @@ export default function JugadorDetail({
       )}
 
       {/* ── Identidad conceptual + ejecutoria ── */}
-      {mostrar("identidad") && (
+      {(isStaff || !seccion || seccion === "perfil" || seccion === "identidad") && (
         <>
           <div id="identidad" className={card}>
             <div className="flex items-center justify-between mb-3">
@@ -477,7 +477,7 @@ export default function JugadorDetail({
       )}
 
       {/* ── Estilo de juego ── */}
-      {mostrar("estilo") && (
+      {(isStaff || !seccion || seccion === "perfil" || seccion === "estilo") && (
         <div id="estilo" className={card}>
           <h2 className="text-base font-semibold text-slate-800 mb-4">Estilo de juego</h2>
           <div className="flex flex-col gap-4">

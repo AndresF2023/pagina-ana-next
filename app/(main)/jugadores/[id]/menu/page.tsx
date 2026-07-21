@@ -3,11 +3,8 @@ import { getJugador } from "../../actions";
 import { notFound } from "next/navigation";
 
 const secciones = [
-  { seccion: "perfil",        titulo: "Perfil",            descripcion: "Tu descripción general, nivel y estilo de juego.", icono: "👤" },
+  { seccion: "perfil",        titulo: "Perfil",            descripcion: "Tu perfil, modelos, identidad y estilo de juego.", icono: "👤" },
   { seccion: "objetivos",     titulo: "Objetivos",          descripcion: "Tus metas a corto y largo plazo.", icono: "🎯" },
-  { seccion: "modelos",       titulo: "Modelos a seguir",   descripcion: "Jugadores/as de referencia que te inspiran.", icono: "⭐" },
-  { seccion: "identidad",     titulo: "Identidad",          descripcion: "Tu identidad conceptual y ejecutoria.", icono: "💡" },
-  { seccion: "estilo",        titulo: "Estilo de juego",    descripcion: "Tus características y patrones habituales.", icono: "🎾" },
   { seccion: "evaluaciones",  titulo: "Evaluaciones",       descripcion: "Evaluaciones físicas y kinésicas en PDF.", icono: "📊" },
   { seccion: "asistencias",   titulo: "Asistencias",        descripcion: "Registro de presencias a los entrenamientos.", icono: "📅" },
   { seccion: "bienestar",     titulo: "Bienestar",          descripcion: "Seguimiento de tu bienestar subjetivo.", icono: "❤️" },
