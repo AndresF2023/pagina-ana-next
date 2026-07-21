@@ -33,13 +33,13 @@ export default async function JugadorPage({
   return (
     <>
       <div className="mb-6">
-        {isStaff ? (
-          <Link href="/jugadores" className="text-sm text-sky-600 hover:text-sky-700 hover:underline">
-            ← Volver a jugadores/as
-          </Link>
-        ) : seccion ? (
+        {seccion ? (
           <Link href={`/jugadores/${id}/menu`} className="text-sm text-sky-600 hover:text-sky-700 hover:underline">
             ← Volver al menú
+          </Link>
+        ) : isStaff ? (
+          <Link href="/jugadores" className="text-sm text-sky-600 hover:text-sky-700 hover:underline">
+            ← Volver a jugadores/as
           </Link>
         ) : null}
         <h1 className="text-2xl font-bold text-slate-800 mt-2">

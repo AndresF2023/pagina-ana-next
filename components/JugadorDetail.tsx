@@ -114,8 +114,8 @@ export default function JugadorDetail({
   isStaff: boolean;
   seccion?: string;
 }) {
-  // Cuando hay una sección activa y el usuario es jugador, solo se muestra esa sección
-  const mostrar = (id: string) => isStaff || !seccion || seccion === id;
+  // Filtra por sección para todos (staff y jugador)
+  const mostrar = (id: string) => !seccion || seccion === id;
   // ── Torneos ──────────────────────────────────────────────────────────────
   const [torneoList, setTorneoList] = useState(torneos);
   const [torneoError, setTorneoError] = useState<string | null>(null);
@@ -385,7 +385,7 @@ export default function JugadorDetail({
       )}
 
       {/* ── Correcciones técnicas y biomecánicas (solo staff) ── */}
-      {isStaff && (
+      {isStaff && mostrar("correcciones") && (
         <div className={card}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-semibold text-slate-800">Correcciones técnicas y biomecánicas</h2>
@@ -419,7 +419,7 @@ export default function JugadorDetail({
       )}
 
       {/* ── Modelos a seguir ── */}
-      {(isStaff || !seccion || seccion === "perfil" || seccion === "modelos") && (
+      {(!seccion || seccion === "perfil") && (
         <div id="modelos" className={card}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-semibold text-slate-800">Modelos a seguir</h2>
@@ -439,7 +439,7 @@ export default function JugadorDetail({
       )}
 
       {/* ── Identidad conceptual + ejecutoria ── */}
-      {(isStaff || !seccion || seccion === "perfil" || seccion === "identidad") && (
+      {(!seccion || seccion === "perfil") && (
         <>
           <div id="identidad" className={card}>
             <div className="flex items-center justify-between mb-3">
@@ -477,7 +477,7 @@ export default function JugadorDetail({
       )}
 
       {/* ── Estilo de juego ── */}
-      {(isStaff || !seccion || seccion === "perfil" || seccion === "estilo") && (
+      {(!seccion || seccion === "perfil") && (
         <div id="estilo" className={card}>
           <h2 className="text-base font-semibold text-slate-800 mb-4">Estilo de juego</h2>
           <div className="flex flex-col gap-4">
@@ -1015,7 +1015,7 @@ export default function JugadorDetail({
       </div>}
 
       {/* ── Gestión de acceso (solo staff) ── */}
-      {isStaff && (
+      {isStaff && mostrar("acceso") && (
         <div className={card}>
           <h2 className="text-base font-semibold text-slate-800 mb-4">Acceso del jugador/a</h2>
 

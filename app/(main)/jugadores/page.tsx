@@ -46,7 +46,7 @@ export default async function JugadoresPage() {
                 </div>
                 <div className="flex items-center gap-3 mt-auto">
                   <Link
-                    href={`/jugadores/${j.id}`}
+                    href={`/jugadores/${j.id}/menu`}
                     className="text-sm text-sky-600 hover:text-sky-700 hover:underline"
                   >
                     Ver perfil →
