@@ -185,7 +185,7 @@ export async function addBienestar(
     const { error } = await supabase.from("bienestar").insert({
       jugador_id: jugadorId,
       fecha,
-      valor: 0,
+      valor: 1,
       nota: "",
       fatiga,
       dolor_muscular,
