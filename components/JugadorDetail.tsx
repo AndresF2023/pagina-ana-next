@@ -40,6 +40,23 @@ function bienestarColor(v: number) {
   return "bg-green-100 text-green-700 border-green-200";
 }
 
+// ── Helpers calendario ────────────────────────────────────────────────────
+const MESES_ES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const DIAS_ES = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+const HOY_STR = new Date().toISOString().slice(0, 10);
+
+function buildCells(year: number, month: number): (number | null)[] {
+  const firstDow = (new Date(year, month, 1).getDay() + 6) % 7;
+  const days = new Date(year, month + 1, 0).getDate();
+  const cells: (number | null)[] = [...Array(firstDow).fill(null), ...Array.from({ length: days }, (_, i) => i + 1)];
+  while (cells.length % 7 !== 0) cells.push(null);
+  return cells;
+}
+
+function mkDate(year: number, month: number, day: number): string {
+  return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
 export default function JugadorDetail({
   jugador, torneos, evaluaciones, asistencias, bienestar, isStaff,
 }: {
@@ -56,6 +73,9 @@ export default function JugadorDetail({
   const [isPendingTorneo, startTorneoTransition] = useTransition();
   const [isPendingDeleteTorneo, startDeleteTorneoTransition] = useTransition();
   const torneoFormRef = useRef<HTMLFormElement>(null);
+  const [vistaTorneo, setVistaTorneo] = useState<"lista" | "calendario">("lista");
+  const [calTorneoDate, setCalTorneoDate] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  const [diaTorneoSel, setDiaTorneoSel] = useState<string | null>(null);
 
   // ── Autosave campos ───────────────────────────────────────────────────────
   const [perfilSaved, setPerfilSaved] = useState(false);
@@ -160,6 +180,9 @@ export default function JugadorDetail({
   const [isPendingAsistencia, startAsistenciaTransition] = useTransition();
   const [isPendingDeleteAsistencia, startDeleteAsistenciaTransition] = useTransition();
   const asistenciaFormRef = useRef<HTMLFormElement>(null);
+  const [vistaAsistencia, setVistaAsistencia] = useState<"lista" | "calendario">("lista");
+  const [calAsistenciaDate, setCalAsistenciaDate] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  const [diaAsistenciaSel, setDiaAsistenciaSel] = useState<string | null>(null);
 
   function handleAddAsistencia(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -438,7 +461,17 @@ export default function JugadorDetail({
 
       {/* ── Asistencias ── */}
       <div className={card}>
-        <h2 className="text-base font-semibold text-slate-800 mb-4">Asistencias</h2>
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <h2 className="text-base font-semibold text-slate-800">Asistencias</h2>
+          <div className="flex gap-1 p-1 bg-slate-100 rounded-xl">
+            {(["lista","calendario"] as const).map((v) => (
+              <button key={v} type="button" onClick={() => setVistaAsistencia(v)}
+                className={`text-sm px-3 py-1 rounded-lg transition-colors ${vistaAsistencia === v ? "bg-white text-slate-800 shadow-sm font-medium" : "text-slate-500 hover:text-slate-700"}`}>
+                {v === "lista" ? "Lista" : "Calendario"}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {isStaff && (
           <form ref={asistenciaFormRef} onSubmit={handleAddAsistencia} noValidate className="flex flex-col gap-3 mb-6">
@@ -467,32 +500,112 @@ export default function JugadorDetail({
           </form>
         )}
 
-        {asistenciaList.length === 0 ? (
-          <p className="text-slate-400 text-sm text-center border border-dashed border-slate-200 rounded-xl py-6">Sin asistencias registradas.</p>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {asistenciaList.map((a) => (
-              <div key={a.id} className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${ESTADO_STYLES[a.estado as EstadoAsistencia]}`}>
-                    {ESTADO_LABELS[a.estado as EstadoAsistencia]}
-                  </span>
-                  <div>
-                    <p className="text-sm font-medium text-slate-800">{formatFecha(a.fecha)}</p>
-                    {a.nota && <p className="text-xs text-slate-500">{a.nota}</p>}
+        {/* Lista */}
+        {vistaAsistencia === "lista" && (
+          asistenciaList.length === 0 ? (
+            <p className="text-slate-400 text-sm text-center border border-dashed border-slate-200 rounded-xl py-6">Sin asistencias registradas.</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {asistenciaList.map((a) => (
+                <div key={a.id} className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${ESTADO_STYLES[a.estado as EstadoAsistencia]}`}>
+                      {ESTADO_LABELS[a.estado as EstadoAsistencia]}
+                    </span>
+                    <div>
+                      <p className="text-sm font-medium text-slate-800">{formatFecha(a.fecha)}</p>
+                      {a.nota && <p className="text-xs text-slate-500">{a.nota}</p>}
+                    </div>
                   </div>
+                  {isStaff && (
+                    <button type="button" disabled={isPendingDeleteAsistencia}
+                      onClick={() => handleDeleteAsistencia(a.id)}
+                      className="text-xs text-red-500 hover:text-red-700 hover:underline cursor-pointer disabled:opacity-50">
+                      Eliminar
+                    </button>
+                  )}
                 </div>
-                {isStaff && (
-                  <button type="button" disabled={isPendingDeleteAsistencia}
-                    onClick={() => handleDeleteAsistencia(a.id)}
-                    className="text-xs text-red-500 hover:text-red-700 hover:underline cursor-pointer disabled:opacity-50">
-                    Eliminar
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )
         )}
+
+        {/* Calendario */}
+        {vistaAsistencia === "calendario" && (() => {
+          const year = calAsistenciaDate.getFullYear();
+          const month = calAsistenciaDate.getMonth();
+          const cells = buildCells(year, month);
+          const selPlanes = diaAsistenciaSel ? asistenciaList.filter(a => a.fecha === diaAsistenciaSel) : [];
+          return (
+            <div className="flex flex-col gap-4">
+              <div className="border border-slate-100 rounded-2xl overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+                  <button type="button" onClick={() => { setCalAsistenciaDate(new Date(year, month - 1, 1)); setDiaAsistenciaSel(null); }}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-slate-600 text-lg">‹</button>
+                  <span className="text-sm font-semibold text-slate-800">{MESES_ES[month]} {year}</span>
+                  <button type="button" onClick={() => { setCalAsistenciaDate(new Date(year, month + 1, 1)); setDiaAsistenciaSel(null); }}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-slate-600 text-lg">›</button>
+                </div>
+                <div className="grid grid-cols-7 border-b border-slate-100">
+                  {DIAS_ES.map(d => <div key={d} className="py-2 text-center text-xs font-medium text-slate-400">{d}</div>)}
+                </div>
+                <div className="grid grid-cols-7">
+                  {cells.map((day, i) => {
+                    if (!day) return <div key={i} className="min-h-[56px] border-b border-r border-slate-50" />;
+                    const dateStr = mkDate(year, month, day);
+                    const dayItems = asistenciaList.filter(a => a.fecha === dateStr);
+                    const isHoy = dateStr === HOY_STR;
+                    const isSel = dateStr === diaAsistenciaSel;
+                    return (
+                      <button key={i} type="button" onClick={() => setDiaAsistenciaSel(isSel ? null : dateStr)}
+                        className={`min-h-[56px] p-1.5 border-b border-r border-slate-100 text-left transition-colors cursor-pointer flex flex-col gap-1 ${isSel ? "bg-sky-50" : "hover:bg-slate-50"}`}>
+                        <span className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full ${isHoy ? "bg-sky-600 text-white" : "text-slate-700"}`}>{day}</span>
+                        <div className="flex flex-col gap-0.5 w-full">
+                          {dayItems.map(a => (
+                            <span key={a.id} className={`text-[10px] px-1 py-0.5 rounded font-medium truncate ${ESTADO_STYLES[a.estado as EstadoAsistencia]}`}>
+                              {ESTADO_LABELS[a.estado as EstadoAsistencia]}
+                            </span>
+                          ))}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex gap-4 px-5 py-3 border-t border-slate-100">
+                  {(["presente","ausente","tarde"] as EstadoAsistencia[]).map(e => (
+                    <div key={e} className="flex items-center gap-1.5">
+                      <span className={`w-2 h-2 rounded-full ${e === "presente" ? "bg-green-500" : e === "ausente" ? "bg-red-500" : "bg-amber-500"}`} />
+                      <span className="text-xs text-slate-500">{ESTADO_LABELS[e]}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {diaAsistenciaSel && (
+                <div className="bg-white border border-slate-200 rounded-2xl p-5">
+                  <h4 className="text-sm font-semibold text-slate-800 mb-3">{formatFecha(diaAsistenciaSel)}</h4>
+                  {selPlanes.length === 0 ? (
+                    <p className="text-slate-400 text-sm">Sin registros para este día.</p>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      {selPlanes.map(a => (
+                        <div key={a.id} className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${ESTADO_STYLES[a.estado as EstadoAsistencia]}`}>{ESTADO_LABELS[a.estado as EstadoAsistencia]}</span>
+                            {a.nota && <p className="text-xs text-slate-500">{a.nota}</p>}
+                          </div>
+                          {isStaff && (
+                            <button type="button" disabled={isPendingDeleteAsistencia} onClick={() => handleDeleteAsistencia(a.id)}
+                              className="text-xs text-red-500 hover:text-red-700 hover:underline cursor-pointer disabled:opacity-50">Eliminar</button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       {/* ── Bienestar subjetivo ── */}
@@ -567,7 +680,17 @@ export default function JugadorDetail({
 
       {/* ── Calendario de torneos ── */}
       <div className={card}>
-        <h2 className="text-base font-semibold text-slate-800 mb-4">Calendario de torneos</h2>
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <h2 className="text-base font-semibold text-slate-800">Calendario de torneos</h2>
+          <div className="flex gap-1 p-1 bg-slate-100 rounded-xl">
+            {(["lista","calendario"] as const).map((v) => (
+              <button key={v} type="button" onClick={() => setVistaTorneo(v)}
+                className={`text-sm px-3 py-1 rounded-lg transition-colors ${vistaTorneo === v ? "bg-white text-slate-800 shadow-sm font-medium" : "text-slate-500 hover:text-slate-700"}`}>
+                {v === "lista" ? "Lista" : "Calendario"}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {isStaff && (
           <form ref={torneoFormRef} onSubmit={(e) => {
@@ -612,29 +735,106 @@ export default function JugadorDetail({
           </form>
         )}
 
-        {torneoList.length === 0 ? (
-          <p className="text-slate-400 text-sm text-center border border-dashed border-slate-200 rounded-xl py-6">Sin torneos cargados todavía.</p>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {torneoList.map((t) => (
-              <div key={t.id} className="flex items-center justify-between bg-sky-50 border border-sky-100 rounded-xl px-4 py-3">
-                <div>
-                  <p className="text-sm font-medium text-slate-800">{t.nombre}</p>
-                  <p className="text-xs text-slate-500">
-                    {formatFecha(t.fecha)}{t.fecha_fin && ` → ${formatFecha(t.fecha_fin)}`}{t.lugar && ` · ${t.lugar}`}
-                  </p>
+        {/* Lista */}
+        {vistaTorneo === "lista" && (
+          torneoList.length === 0 ? (
+            <p className="text-slate-400 text-sm text-center border border-dashed border-slate-200 rounded-xl py-6">Sin torneos cargados todavía.</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {torneoList.map((t) => (
+                <div key={t.id} className="flex items-center justify-between bg-sky-50 border border-sky-100 rounded-xl px-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium text-slate-800">{t.nombre}</p>
+                    <p className="text-xs text-slate-500">
+                      {formatFecha(t.fecha)}{t.fecha_fin && ` → ${formatFecha(t.fecha_fin)}`}{t.lugar && ` · ${t.lugar}`}
+                    </p>
+                  </div>
+                  {isStaff && (
+                    <button type="button" disabled={isPendingDeleteTorneo}
+                      onClick={() => { startDeleteTorneoTransition(async () => { await deleteTorneo(t.id, jugador.id); setTorneoList(prev => prev.filter(x => x.id !== t.id)); }); }}
+                      className="text-xs text-red-500 hover:text-red-700 hover:underline cursor-pointer disabled:opacity-50">
+                      Eliminar
+                    </button>
+                  )}
                 </div>
-                {isStaff && (
-                  <button type="button" disabled={isPendingDeleteTorneo}
-                    onClick={() => { startDeleteTorneoTransition(async () => { await deleteTorneo(t.id, jugador.id); setTorneoList(prev => prev.filter(x => x.id !== t.id)); }); }}
-                    className="text-xs text-red-500 hover:text-red-700 hover:underline cursor-pointer disabled:opacity-50">
-                    Eliminar
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )
         )}
+
+        {/* Calendario */}
+        {vistaTorneo === "calendario" && (() => {
+          const year = calTorneoDate.getFullYear();
+          const month = calTorneoDate.getMonth();
+          const cells = buildCells(year, month);
+          const selTorneos = diaTorneoSel ? torneoList.filter(t => diaTorneoSel >= t.fecha && diaTorneoSel <= (t.fecha_fin ?? t.fecha)) : [];
+          return (
+            <div className="flex flex-col gap-4">
+              <div className="border border-slate-100 rounded-2xl overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+                  <button type="button" onClick={() => { setCalTorneoDate(new Date(year, month - 1, 1)); setDiaTorneoSel(null); }}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-slate-600 text-lg">‹</button>
+                  <span className="text-sm font-semibold text-slate-800">{MESES_ES[month]} {year}</span>
+                  <button type="button" onClick={() => { setCalTorneoDate(new Date(year, month + 1, 1)); setDiaTorneoSel(null); }}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-slate-600 text-lg">›</button>
+                </div>
+                <div className="grid grid-cols-7 border-b border-slate-100">
+                  {DIAS_ES.map(d => <div key={d} className="py-2 text-center text-xs font-medium text-slate-400">{d}</div>)}
+                </div>
+                <div className="grid grid-cols-7">
+                  {cells.map((day, i) => {
+                    if (!day) return <div key={i} className="min-h-[64px] border-b border-r border-slate-50" />;
+                    const dateStr = mkDate(year, month, day);
+                    const dayTorneos = torneoList.filter(t => dateStr >= t.fecha && dateStr <= (t.fecha_fin ?? t.fecha));
+                    const isStart = torneoList.some(t => t.fecha === dateStr);
+                    const isHoy = dateStr === HOY_STR;
+                    const isSel = dateStr === diaTorneoSel;
+                    return (
+                      <button key={i} type="button" onClick={() => setDiaTorneoSel(isSel ? null : dateStr)}
+                        className={`min-h-[64px] p-1.5 border-b border-r border-slate-100 text-left transition-colors cursor-pointer flex flex-col gap-1 ${isSel ? "bg-sky-50" : dayTorneos.length > 0 ? "bg-sky-50/40 hover:bg-sky-50" : "hover:bg-slate-50"}`}>
+                        <span className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full ${isHoy ? "bg-sky-600 text-white" : "text-slate-700"}`}>{day}</span>
+                        <div className="flex flex-col gap-0.5 w-full">
+                          {isStart && dayTorneos.slice(0, 2).map(t => (
+                            <span key={t.id} className="text-[10px] px-1 py-0.5 rounded bg-sky-100 text-sky-700 font-medium truncate">{t.nombre}</span>
+                          ))}
+                          {!isStart && dayTorneos.length > 0 && (
+                            <span className="w-full h-1 rounded bg-sky-200 mt-1" />
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              {diaTorneoSel && (
+                <div className="bg-white border border-slate-200 rounded-2xl p-5">
+                  <h4 className="text-sm font-semibold text-slate-800 mb-3">{formatFecha(diaTorneoSel)}</h4>
+                  {selTorneos.length === 0 ? (
+                    <p className="text-slate-400 text-sm">Sin torneos para este día.</p>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      {selTorneos.map(t => (
+                        <div key={t.id} className="flex items-center justify-between bg-sky-50 border border-sky-100 rounded-xl px-4 py-3">
+                          <div>
+                            <p className="text-sm font-medium text-slate-800">{t.nombre}</p>
+                            <p className="text-xs text-slate-500">
+                              {formatFecha(t.fecha)}{t.fecha_fin && ` → ${formatFecha(t.fecha_fin)}`}{t.lugar && ` · ${t.lugar}`}
+                            </p>
+                          </div>
+                          {isStaff && (
+                            <button type="button" disabled={isPendingDeleteTorneo}
+                              onClick={() => { startDeleteTorneoTransition(async () => { await deleteTorneo(t.id, jugador.id); setTorneoList(prev => prev.filter(x => x.id !== t.id)); setDiaTorneoSel(null); }); }}
+                              className="text-xs text-red-500 hover:text-red-700 hover:underline cursor-pointer disabled:opacity-50">Eliminar</button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       {/* ── Gestión de acceso (solo staff) ── */}
