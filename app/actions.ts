@@ -12,7 +12,8 @@ function mapRow(row: ExerciseRow): Exercise {
     id: row.id,
     title: row.title,
     description: row.description,
-    videoUrl: row.video_url,
+    videoUrl: row.video_url ?? "",
+    imageUrls: row.image_urls ?? [],
     notes: row.notes ?? "",
     category: (CATEGORIES as readonly string[]).includes(row.category ?? "")
       ? (row.category as Category)
@@ -30,7 +31,7 @@ export async function getExercises(): Promise<Exercise[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from(TABLE)
-    .select("id, title, description, video_url, notes, category, created_at")
+    .select("id, title, description, video_url, image_urls, notes, category, created_at")
     .order("created_at", { ascending: false });
 
   if (error) throw toDbError(error, "Error al cargar los ejercicios.");
@@ -41,47 +42,73 @@ export async function createExercise(formData: FormData): Promise<void> {
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const videoUrl = String(formData.get("videoUrl") ?? "").trim();
+  const imageUrlsRaw = String(formData.get("imageUrls") ?? "[]");
   const categoryRaw = String(formData.get("category") ?? "").trim();
   const category = (CATEGORIES as readonly string[]).includes(categoryRaw)
     ? (categoryRaw as Category)
     : null;
 
-  console.log("[createExercise] campos recibidos:", {
-    title: title || "(vacío)",
-    description: description ? "(ok)" : "(vacío)",
-    videoUrl: videoUrl || "(vacío)",
-  });
-
-  if (!title || !description || !videoUrl) {
-    throw new Error(
-      `Campos vacíos: ${[!title && "título", !description && "descripción", !videoUrl && "videoUrl"].filter(Boolean).join(", ")}`
-    );
+  if (!title || !description) {
+    throw new Error("El nombre y la descripción son obligatorios.");
   }
 
+  let imageUrls: string[] = [];
   try {
-    new URL(videoUrl);
+    imageUrls = JSON.parse(imageUrlsRaw);
   } catch {
-    throw new Error("La URL del video no es válida.");
+    imageUrls = [];
+  }
+
+  if (videoUrl) {
+    try {
+      new URL(videoUrl);
+    } catch {
+      throw new Error("La URL del video no es válida.");
+    }
   }
 
   const supabase = await createClient();
   const { error } = await supabase.from(TABLE).insert({
     title,
     description,
-    video_url: videoUrl,
+    video_url: videoUrl || null,
+    image_urls: imageUrls,
     notes: "",
     category,
   });
 
   if (error) throw toDbError(error, "Error al guardar el ejercicio.");
-  revalidatePath("/");
+  revalidatePath("/ejercicios");
+}
+
+export async function updateExercise(
+  id: string,
+  title: string,
+  description: string,
+  category: string
+): Promise<void> {
+  if (!title.trim() || !description.trim()) {
+    throw new Error("El nombre y la descripción son obligatorios.");
+  }
+  const catValue = (CATEGORIES as readonly string[]).includes(category)
+    ? (category as Category)
+    : null;
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from(TABLE)
+    .update({ title: title.trim(), description: description.trim(), category: catValue })
+    .eq("id", id);
+
+  if (error) throw toDbError(error, "Error al actualizar el ejercicio.");
+  revalidatePath("/ejercicios");
 }
 
 export async function deleteExercise(id: string): Promise<void> {
   const supabase = await createClient();
   const { error } = await supabase.from(TABLE).delete().eq("id", id);
   if (error) throw toDbError(error, "Error al eliminar el ejercicio.");
-  revalidatePath("/");
+  revalidatePath("/ejercicios");
 }
 
 export async function updateNotes(id: string, notes: string): Promise<void> {
@@ -91,5 +118,5 @@ export async function updateNotes(id: string, notes: string): Promise<void> {
     .update({ notes })
     .eq("id", id);
   if (error) throw toDbError(error, "Error al guardar las indicaciones.");
-  revalidatePath("/");
+  revalidatePath("/ejercicios");
 }

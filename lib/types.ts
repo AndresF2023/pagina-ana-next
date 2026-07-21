@@ -1,10 +1,16 @@
 export const CATEGORIES = [
+  "Warm-Up",
+  "Footdrills",
   "Drive",
   "Revés",
   "Saque",
   "Volea",
   "Smash",
   "Juego de pies",
+  "Correctivos",
+  "Drills tácticos/patrones",
+  "Juegos",
+  "Canastos",
   "Otro",
 ] as const;
 
@@ -15,6 +21,7 @@ export interface Exercise {
   title: string;
   description: string;
   videoUrl: string;
+  imageUrls: string[];
   notes: string;
   category: Category | null;
   createdAt?: string;
@@ -24,7 +31,8 @@ export interface ExerciseRow {
   id: string;
   title: string;
   description: string;
-  video_url: string;
+  video_url: string | null;
+  image_urls: string[] | null;
   notes: string;
   category: string | null;
   created_at: string;
