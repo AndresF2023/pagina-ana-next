@@ -10,17 +10,17 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   return (
     <>
       <header className="bg-gradient-to-r from-sky-400 to-sky-600 text-white px-4">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between py-4 gap-3">
-          <div className="flex items-center gap-2.5 whitespace-nowrap">
+        <div className="max-w-5xl mx-auto flex flex-row items-center justify-between py-3 sm:py-4 gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 whitespace-nowrap shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/club.png" alt="Logo Club" width={44} height={44} className="rounded-full" />
-            <span className="text-2xl font-bold">Tenis del 9</span>
+            <img src="/club.png" alt="Logo Club" width={36} height={36} className="rounded-full sm:w-11 sm:h-11" />
+            <span className="text-lg sm:text-2xl font-bold">Tenis del 9</span>
           </div>
           {isStaff && <Nav />}
-          <SignOutButton />
+          <div className="shrink-0"><SignOutButton /></div>
         </div>
       </header>
-      <main className="max-w-5xl mx-auto px-4 py-8">
+      <main className="max-w-5xl mx-auto px-4 py-6 sm:py-8">
         {children}
       </main>
     </>

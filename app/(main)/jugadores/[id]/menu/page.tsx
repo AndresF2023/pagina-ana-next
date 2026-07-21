@@ -30,16 +30,16 @@ export default async function JugadorMenuPage({ params }: { params: Promise<{ id
         <p className="text-slate-500">Seleccioná una sección para ver tu información.</p>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-3 w-full max-w-3xl">
+      <div className="grid gap-3 sm:gap-5 grid-cols-2 sm:grid-cols-3 w-full max-w-3xl">
         {secciones.map(({ seccion, titulo, descripcion, icono }) => (
           <Link
             key={seccion}
             href={`/jugadores/${id}?seccion=${seccion}`}
-            className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col items-center text-center gap-3 hover:border-sky-400 hover:shadow-md transition-all"
+            className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-6 flex flex-col items-center text-center gap-2 sm:gap-3 hover:border-sky-400 hover:shadow-md transition-all"
           >
-            <span className="text-4xl">{icono}</span>
-            <span className="text-base font-semibold text-slate-800">{titulo}</span>
-            <span className="text-sm text-slate-500">{descripcion}</span>
+            <span className="text-3xl sm:text-4xl">{icono}</span>
+            <span className="text-sm sm:text-base font-semibold text-slate-800 leading-tight">{titulo}</span>
+            <span className="text-xs sm:text-sm text-slate-500 hidden sm:block">{descripcion}</span>
           </Link>
         ))}
       </div>

@@ -17,7 +17,7 @@ export default function Nav() {
         <Link
           key={href}
           href={href}
-          className={`text-sm px-4 py-1.5 rounded-lg transition-colors ${
+          className={`text-xs sm:text-sm px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-lg transition-colors ${
             pathname.startsWith(href)
               ? "bg-white/25 text-white font-semibold"
               : "text-sky-100 hover:bg-white/10"

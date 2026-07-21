@@ -681,10 +681,10 @@ export default function JugadorDetail({
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-slate-700">Valor (1 = muy mal · 10 = excelente)</label>
-              <div className="flex gap-1.5 flex-wrap">
+              <div className="flex gap-1 sm:gap-1.5 flex-wrap">
                 {[1,2,3,4,5,6,7,8,9,10].map((n) => (
                   <button key={n} type="button" onClick={() => setBienestarValor(n)}
-                    className={`w-9 h-9 rounded-xl text-sm font-semibold border transition-colors cursor-pointer ${
+                    className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl text-xs sm:text-sm font-semibold border transition-colors cursor-pointer ${
                       bienestarValor === n
                         ? "bg-sky-600 text-white border-sky-600"
                         : n <= 3
@@ -765,18 +765,20 @@ export default function JugadorDetail({
               } catch (err) { setTorneoError(err instanceof Error ? err.message : "Error al guardar."); }
             });
           }} noValidate className="flex flex-col gap-3 mb-6">
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col md:flex-row gap-3">
               <div className="flex flex-col gap-1 flex-1">
                 <label className="text-sm font-medium text-slate-700">Torneo</label>
                 <input name="nombre" type="text" placeholder="Ej: Torneo Nacional" className={inputClass} />
               </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-slate-700">Fecha inicio</label>
-                <input name="fecha" type="date" className={inputClass} />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-slate-700">Fecha límite</label>
-                <input name="fecha_fin" type="date" className={inputClass} />
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-slate-700">Fecha inicio</label>
+                  <input name="fecha" type="date" className={inputClass} />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-slate-700">Fecha límite</label>
+                  <input name="fecha_fin" type="date" className={inputClass} />
+                </div>
               </div>
               <div className="flex flex-col gap-1 flex-1">
                 <label className="text-sm font-medium text-slate-700">Lugar (opcional)</label>
