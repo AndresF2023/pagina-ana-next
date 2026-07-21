@@ -20,15 +20,15 @@ export default async function JugadorPage({
   const { data: { user } } = await supabase.auth.getUser();
   const isStaff = user?.user_metadata?.role !== "jugador";
 
-  const [jugador, torneos, evaluaciones, asistencias, bienestar] = await Promise.all([
-    getJugador(id),
-    getTorneos(id),
-    getEvaluaciones(id),
-    getAsistencias(id),
-    getBienestar(id),
-  ]);
-
+  const jugador = await getJugador(id);
   if (!jugador) notFound();
+
+  const [torneos, evaluaciones, asistencias, bienestar] = await Promise.all([
+    getTorneos(id).catch(() => []),
+    getEvaluaciones(id).catch((e: unknown) => { console.error("getEvaluaciones:", e); return []; }),
+    getAsistencias(id).catch((e: unknown) => { console.error("getAsistencias:", e); return []; }),
+    getBienestar(id).catch(() => []),
+  ]);
 
   return (
     <>
