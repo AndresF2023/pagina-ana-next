@@ -194,7 +194,10 @@ export async function addBienestar(
       nota_sueno,
       estado_animico,
     });
-    if (error) return { error: "Error al guardar el bienestar." };
+    if (error) {
+      console.error("bienestar insert error:", JSON.stringify(error));
+      return { error: "Error al guardar el bienestar." };
+    }
     revalidatePath(`/jugadores/${jugadorId}`);
     return null;
   } catch {
