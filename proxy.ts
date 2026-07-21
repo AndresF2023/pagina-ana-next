@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -45,6 +45,18 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
+  }
+
+  // Ruteo por rol: los jugadores solo pueden acceder a su propio perfil
+  if (user?.user_metadata?.role === "jugador") {
+    const jugadorId = user.user_metadata.jugador_id as string;
+    const allowedPath = `/jugadores/${jugadorId}`;
+
+    if (!request.nextUrl.pathname.startsWith(allowedPath)) {
+      const url = request.nextUrl.clone();
+      url.pathname = allowedPath;
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

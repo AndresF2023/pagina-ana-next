@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/lib/supabase-admin";
 import type { Jugador, Torneo } from "@/lib/types";
 
 export async function getJugadores(): Promise<Jugador[]> {
@@ -77,5 +78,51 @@ export async function deleteTorneo(id: string, jugadorId: string): Promise<void>
   const supabase = await createClient();
   const { error } = await supabase.from("torneos").delete().eq("id", id);
   if (error) throw new Error("Error al eliminar el torneo.");
+  revalidatePath(`/jugadores/${jugadorId}`);
+}
+
+export async function createPlayerAccount(jugadorId: string, email: string, password: string): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || user.user_metadata?.role === "jugador") throw new Error("No autorizado.");
+
+  const admin = createAdminClient();
+  const { data, error } = await admin.auth.admin.createUser({
+    email,
+    password,
+    user_metadata: { role: "jugador", jugador_id: jugadorId },
+    email_confirm: true,
+  });
+  if (error) throw new Error(`Error al crear la cuenta: ${error.message}`);
+
+  const { error: updateError } = await supabase
+    .from("jugadores")
+    .update({ user_id: data.user.id })
+    .eq("id", jugadorId);
+
+  if (updateError) {
+    await admin.auth.admin.deleteUser(data.user.id);
+    throw new Error("Error al vincular la cuenta.");
+  }
+
+  revalidatePath(`/jugadores/${jugadorId}`);
+}
+
+export async function deletePlayerAccount(jugadorId: string): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || user.user_metadata?.role === "jugador") throw new Error("No autorizado.");
+
+  const { data: jugador } = await supabase
+    .from("jugadores")
+    .select("user_id")
+    .eq("id", jugadorId)
+    .single();
+
+  if (!jugador?.user_id) throw new Error("Este jugador no tiene cuenta activa.");
+
+  await supabase.from("jugadores").update({ user_id: null }).eq("id", jugadorId);
+  await createAdminClient().auth.admin.deleteUser(jugador.user_id);
+
   revalidatePath(`/jugadores/${jugadorId}`);
 }

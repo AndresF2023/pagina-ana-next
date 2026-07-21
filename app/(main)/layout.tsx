@@ -1,7 +1,12 @@
+import { createClient } from "@/utils/supabase/server";
 import { signOut } from "@/app/login/actions";
 import Nav from "@/components/Nav";
 
-export default function MainLayout({ children }: { children: React.ReactNode }) {
+export default async function MainLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const isStaff = user?.user_metadata?.role !== "jugador";
+
   return (
     <>
       <header className="bg-gradient-to-r from-sky-400 to-sky-600 text-white px-4">
@@ -11,7 +16,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             <img src="/club.png" alt="Logo Club" width={44} height={44} className="rounded-full" />
             <span className="text-2xl font-bold">Tenis del 9</span>
           </div>
-          <Nav />
+          {isStaff && <Nav />}
           <form action={signOut}>
             <button
               type="submit"

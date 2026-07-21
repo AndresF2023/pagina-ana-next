@@ -1,7 +1,13 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { updateJugador, addTorneo, deleteTorneo } from "@/app/(main)/jugadores/actions";
+import {
+  updateJugador,
+  addTorneo,
+  deleteTorneo,
+  createPlayerAccount,
+  deletePlayerAccount,
+} from "@/app/(main)/jugadores/actions";
 import type { Jugador, Torneo } from "@/lib/types";
 
 function debounce<T extends (...args: Parameters<T>) => void>(fn: T, ms: number) {
@@ -12,7 +18,15 @@ function debounce<T extends (...args: Parameters<T>) => void>(fn: T, ms: number)
   };
 }
 
-export default function JugadorDetail({ jugador, torneos }: { jugador: Jugador; torneos: Torneo[] }) {
+export default function JugadorDetail({
+  jugador,
+  torneos,
+  isStaff,
+}: {
+  jugador: Jugador;
+  torneos: Torneo[];
+  isStaff: boolean;
+}) {
   const [torneoList, setTorneoList] = useState(torneos);
   const [torneoError, setTorneoError] = useState<string | null>(null);
   const [perfilSaved, setPerfilSaved] = useState(false);
@@ -20,6 +34,13 @@ export default function JugadorDetail({ jugador, torneos }: { jugador: Jugador; 
   const [isPendingTorneo, startTorneoTransition] = useTransition();
   const [isPendingDelete, startDeleteTransition] = useTransition();
   const torneoFormRef = useRef<HTMLFormElement>(null);
+
+  // Gestión de cuenta
+  const [hasAccount, setHasAccount] = useState(!!jugador.user_id);
+  const [accountError, setAccountError] = useState<string | null>(null);
+  const [accountSuccess, setAccountSuccess] = useState<string | null>(null);
+  const [isPendingAccount, startAccountTransition] = useTransition();
+  const accountFormRef = useRef<HTMLFormElement>(null);
 
   const debouncedSavePerfil = useRef(
     debounce((value: string) => {
@@ -53,12 +74,20 @@ export default function JugadorDetail({ jugador, torneos }: { jugador: Jugador; 
       try {
         await addTorneo(jugador.id, formData);
         torneoFormRef.current?.reset();
-        // Refresh list optimistically
         const lugar = String(formData.get("lugar") ?? "").trim();
-        setTorneoList((prev) => [
-          ...prev,
-          { id: Date.now().toString(), jugador_id: jugador.id, nombre, fecha, lugar, created_at: new Date().toISOString() },
-        ].sort((a, b) => a.fecha.localeCompare(b.fecha)));
+        setTorneoList((prev) =>
+          [
+            ...prev,
+            {
+              id: Date.now().toString(),
+              jugador_id: jugador.id,
+              nombre,
+              fecha,
+              lugar,
+              created_at: new Date().toISOString(),
+            },
+          ].sort((a, b) => a.fecha.localeCompare(b.fecha))
+        );
       } catch (err) {
         setTorneoError(err instanceof Error ? err.message : "Error al guardar.");
       }
@@ -69,6 +98,42 @@ export default function JugadorDetail({ jugador, torneos }: { jugador: Jugador; 
     startDeleteTransition(async () => {
       await deleteTorneo(id, jugador.id);
       setTorneoList((prev) => prev.filter((t) => t.id !== id));
+    });
+  }
+
+  function handleCreateAccount(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setAccountError(null);
+    setAccountSuccess(null);
+    const formData = new FormData(e.currentTarget);
+    const email = String(formData.get("email") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+    if (!email || !password) {
+      setAccountError("Completá email y contraseña.");
+      return;
+    }
+    startAccountTransition(async () => {
+      try {
+        await createPlayerAccount(jugador.id, email, password);
+        setHasAccount(true);
+        setAccountSuccess(`Cuenta creada para ${email}`);
+        accountFormRef.current?.reset();
+      } catch (err) {
+        setAccountError(err instanceof Error ? err.message : "Error al crear la cuenta.");
+      }
+    });
+  }
+
+  function handleDeleteAccount() {
+    setAccountError(null);
+    setAccountSuccess(null);
+    startAccountTransition(async () => {
+      try {
+        await deletePlayerAccount(jugador.id);
+        setHasAccount(false);
+      } catch (err) {
+        setAccountError(err instanceof Error ? err.message : "Error al revocar el acceso.");
+      }
     });
   }
 
@@ -108,47 +173,49 @@ export default function JugadorDetail({ jugador, torneos }: { jugador: Jugador; 
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
         <h2 className="text-base font-semibold text-slate-800 mb-4">Calendario de torneos</h2>
 
-        {/* Formulario agregar torneo */}
-        <form ref={torneoFormRef} onSubmit={handleAddTorneo} noValidate className="flex flex-col gap-3 mb-6">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex flex-col gap-1 flex-1">
-              <label className="text-sm font-medium text-slate-700">Torneo</label>
-              <input
-                name="nombre"
-                type="text"
-                placeholder="Ej: Torneo Nacional"
-                className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
-              />
+        {/* Formulario agregar torneo - solo staff */}
+        {isStaff && (
+          <form ref={torneoFormRef} onSubmit={handleAddTorneo} noValidate className="flex flex-col gap-3 mb-6">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col gap-1 flex-1">
+                <label className="text-sm font-medium text-slate-700">Torneo</label>
+                <input
+                  name="nombre"
+                  type="text"
+                  placeholder="Ej: Torneo Nacional"
+                  className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-slate-700">Fecha</label>
+                <input
+                  name="fecha"
+                  type="date"
+                  className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
+                />
+              </div>
+              <div className="flex flex-col gap-1 flex-1">
+                <label className="text-sm font-medium text-slate-700">Lugar (opcional)</label>
+                <input
+                  name="lugar"
+                  type="text"
+                  placeholder="Ej: Buenos Aires"
+                  className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
+                />
+              </div>
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-slate-700">Fecha</label>
-              <input
-                name="fecha"
-                type="date"
-                className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
-              />
-            </div>
-            <div className="flex flex-col gap-1 flex-1">
-              <label className="text-sm font-medium text-slate-700">Lugar (opcional)</label>
-              <input
-                name="lugar"
-                type="text"
-                placeholder="Ej: Buenos Aires"
-                className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
-              />
-            </div>
-          </div>
-          {torneoError && (
-            <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{torneoError}</p>
-          )}
-          <button
-            type="submit"
-            disabled={isPendingTorneo}
-            className="self-start bg-sky-600 hover:bg-sky-700 disabled:bg-sky-400 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors cursor-pointer disabled:cursor-not-allowed"
-          >
-            {isPendingTorneo ? "Guardando..." : "Agregar torneo"}
-          </button>
-        </form>
+            {torneoError && (
+              <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{torneoError}</p>
+            )}
+            <button
+              type="submit"
+              disabled={isPendingTorneo}
+              className="self-start bg-sky-600 hover:bg-sky-700 disabled:bg-sky-400 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors cursor-pointer disabled:cursor-not-allowed"
+            >
+              {isPendingTorneo ? "Guardando..." : "Agregar torneo"}
+            </button>
+          </form>
+        )}
 
         {/* Lista de torneos */}
         {torneoList.length === 0 ? (
@@ -158,27 +225,106 @@ export default function JugadorDetail({ jugador, torneos }: { jugador: Jugador; 
         ) : (
           <div className="flex flex-col gap-2">
             {torneoList.map((t) => (
-              <div key={t.id} className="flex items-center justify-between bg-sky-50 border border-sky-100 rounded-xl px-4 py-3">
+              <div
+                key={t.id}
+                className="flex items-center justify-between bg-sky-50 border border-sky-100 rounded-xl px-4 py-3"
+              >
                 <div>
                   <p className="text-sm font-medium text-slate-800">{t.nombre}</p>
                   <p className="text-xs text-slate-500">
-                    {new Date(t.fecha + "T00:00:00").toLocaleDateString("es-AR", { day: "numeric", month: "long", year: "numeric" })}
+                    {new Date(t.fecha + "T00:00:00").toLocaleDateString("es-AR", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
                     {t.lugar && ` · ${t.lugar}`}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  disabled={isPendingDelete}
-                  onClick={() => handleDeleteTorneo(t.id)}
-                  className="text-xs text-red-500 hover:text-red-700 hover:underline cursor-pointer disabled:opacity-50"
-                >
-                  Eliminar
-                </button>
+                {isStaff && (
+                  <button
+                    type="button"
+                    disabled={isPendingDelete}
+                    onClick={() => handleDeleteTorneo(t.id)}
+                    className="text-xs text-red-500 hover:text-red-700 hover:underline cursor-pointer disabled:opacity-50"
+                  >
+                    Eliminar
+                  </button>
+                )}
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Gestión de acceso - solo staff */}
+      {isStaff && (
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+          <h2 className="text-base font-semibold text-slate-800 mb-4">Acceso del jugador/a</h2>
+
+          {accountError && (
+            <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2 mb-4">
+              {accountError}
+            </p>
+          )}
+          {accountSuccess && (
+            <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-xl px-3 py-2 mb-4">
+              {accountSuccess}
+            </p>
+          )}
+
+          {hasAccount ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-full font-medium">
+                  Cuenta activa
+                </span>
+                <span className="text-sm text-slate-500">El jugador/a puede iniciar sesión</span>
+              </div>
+              <button
+                type="button"
+                disabled={isPendingAccount}
+                onClick={handleDeleteAccount}
+                className="text-sm text-red-500 hover:text-red-700 hover:underline disabled:opacity-50 cursor-pointer"
+              >
+                {isPendingAccount ? "Revocando..." : "Revocar acceso"}
+              </button>
+            </div>
+          ) : (
+            <form ref={accountFormRef} onSubmit={handleCreateAccount} noValidate className="flex flex-col gap-3">
+              <p className="text-sm text-slate-500">
+                Creá una cuenta para que este jugador/a pueda acceder a su perfil.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-col gap-1 flex-1">
+                  <label className="text-sm font-medium text-slate-700">Email</label>
+                  <input
+                    name="email"
+                    type="email"
+                    placeholder="jugador@email.com"
+                    className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
+                  />
+                </div>
+                <div className="flex flex-col gap-1 flex-1">
+                  <label className="text-sm font-medium text-slate-700">Contraseña</label>
+                  <input
+                    name="password"
+                    type="password"
+                    placeholder="Mínimo 6 caracteres"
+                    className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={isPendingAccount}
+                className="self-start bg-sky-600 hover:bg-sky-700 disabled:bg-sky-400 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors cursor-pointer disabled:cursor-not-allowed"
+              >
+                {isPendingAccount ? "Creando..." : "Crear cuenta"}
+              </button>
+            </form>
+          )}
+        </div>
+      )}
     </div>
   );
 }
