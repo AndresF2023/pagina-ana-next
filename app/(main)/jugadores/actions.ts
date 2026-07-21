@@ -73,11 +73,12 @@ export async function getTorneos(jugadorId: string): Promise<Torneo[]> {
 export async function addTorneo(jugadorId: string, formData: FormData): Promise<void> {
   const nombre = String(formData.get("nombre") ?? "").trim();
   const fecha = String(formData.get("fecha") ?? "").trim();
+  const fecha_fin = String(formData.get("fecha_fin") ?? "").trim() || null;
   const lugar = String(formData.get("lugar") ?? "").trim();
   if (!nombre || !fecha) throw new Error("Completá nombre y fecha del torneo.");
 
   const supabase = await createClient();
-  const { error } = await supabase.from("torneos").insert({ jugador_id: jugadorId, nombre, fecha, lugar });
+  const { error } = await supabase.from("torneos").insert({ jugador_id: jugadorId, nombre, fecha, fecha_fin, lugar });
   if (error) throw new Error("Error al guardar el torneo.");
   revalidatePath(`/jugadores/${jugadorId}`);
 }

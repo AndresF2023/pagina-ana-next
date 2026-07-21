@@ -59,6 +59,7 @@ export interface Torneo {
   jugador_id: string;
   nombre: string;
   fecha: string;
+  fecha_fin: string | null;
   lugar: string;
   created_at: string;
 }
