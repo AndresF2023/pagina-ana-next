@@ -102,5 +102,6 @@ export interface Planificacion {
   titulo: string;
   contenido: string;
   fecha: string;
+  ejercicio_ids: string[];
   created_at: string;
 }

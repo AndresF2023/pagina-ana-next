@@ -1,14 +1,19 @@
 import { getPlanificaciones } from "./actions";
+import { getExercises } from "@/app/actions";
 import PlanificacionSection from "@/components/PlanificacionSection";
 
 export const dynamic = "force-dynamic";
 
 export default async function PlanificacionPage() {
   let planes: Awaited<ReturnType<typeof getPlanificaciones>> = [];
+  let ejercicios: Awaited<ReturnType<typeof getExercises>> = [];
   let dbError: string | null = null;
 
   try {
-    planes = await getPlanificaciones();
+    [planes, ejercicios] = await Promise.all([
+      getPlanificaciones(),
+      getExercises().catch(() => []),
+    ]);
   } catch (err) {
     dbError = err instanceof Error ? err.message : "Error al cargar.";
   }
@@ -23,7 +28,7 @@ export default async function PlanificacionPage() {
         </p>
       )}
 
-      <PlanificacionSection inicial={planes} />
+      <PlanificacionSection inicial={planes} ejercicios={ejercicios} />
     </>
   );
 }
