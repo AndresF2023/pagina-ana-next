@@ -3,15 +3,15 @@ import { getJugador } from "../../actions";
 import { notFound } from "next/navigation";
 
 const secciones = [
-  { anchor: "perfil",        titulo: "Perfil",            descripcion: "Tu descripción general, nivel y estilo de juego.", icono: "👤" },
-  { anchor: "objetivos",     titulo: "Objetivos",          descripcion: "Tus metas a corto y largo plazo.", icono: "🎯" },
-  { anchor: "modelos",       titulo: "Modelos a seguir",   descripcion: "Jugadores/as de referencia que te inspiran.", icono: "⭐" },
-  { anchor: "identidad",     titulo: "Identidad",          descripcion: "Tu identidad conceptual y ejecutoria.", icono: "💡" },
-  { anchor: "estilo",        titulo: "Estilo de juego",    descripcion: "Tus características y patrones habituales.", icono: "🎾" },
-  { anchor: "evaluaciones",  titulo: "Evaluaciones",       descripcion: "Evaluaciones físicas y kinésicas en PDF.", icono: "📊" },
-  { anchor: "asistencias",   titulo: "Asistencias",        descripcion: "Registro de presencias a los entrenamientos.", icono: "📅" },
-  { anchor: "bienestar",     titulo: "Bienestar",          descripcion: "Seguimiento de tu bienestar subjetivo.", icono: "❤️" },
-  { anchor: "torneos",       titulo: "Torneos",            descripcion: "Calendario de torneos y competencias.", icono: "🏆" },
+  { seccion: "perfil",        titulo: "Perfil",            descripcion: "Tu descripción general, nivel y estilo de juego.", icono: "👤" },
+  { seccion: "objetivos",     titulo: "Objetivos",          descripcion: "Tus metas a corto y largo plazo.", icono: "🎯" },
+  { seccion: "modelos",       titulo: "Modelos a seguir",   descripcion: "Jugadores/as de referencia que te inspiran.", icono: "⭐" },
+  { seccion: "identidad",     titulo: "Identidad",          descripcion: "Tu identidad conceptual y ejecutoria.", icono: "💡" },
+  { seccion: "estilo",        titulo: "Estilo de juego",    descripcion: "Tus características y patrones habituales.", icono: "🎾" },
+  { seccion: "evaluaciones",  titulo: "Evaluaciones",       descripcion: "Evaluaciones físicas y kinésicas en PDF.", icono: "📊" },
+  { seccion: "asistencias",   titulo: "Asistencias",        descripcion: "Registro de presencias a los entrenamientos.", icono: "📅" },
+  { seccion: "bienestar",     titulo: "Bienestar",          descripcion: "Seguimiento de tu bienestar subjetivo.", icono: "❤️" },
+  { seccion: "torneos",       titulo: "Torneos",            descripcion: "Calendario de torneos y competencias.", icono: "🏆" },
 ];
 
 export const dynamic = "force-dynamic";
@@ -31,10 +31,10 @@ export default async function JugadorMenuPage({ params }: { params: Promise<{ id
       </div>
 
       <div className="grid gap-5 sm:grid-cols-3 w-full max-w-3xl">
-        {secciones.map(({ anchor, titulo, descripcion, icono }) => (
+        {secciones.map(({ seccion, titulo, descripcion, icono }) => (
           <Link
-            key={anchor}
-            href={`/jugadores/${id}#${anchor}`}
+            key={seccion}
+            href={`/jugadores/${id}?seccion=${seccion}`}
             className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col items-center text-center gap-3 hover:border-sky-400 hover:shadow-md transition-all"
           >
             <span className="text-4xl">{icono}</span>

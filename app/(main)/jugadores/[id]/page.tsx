@@ -6,8 +6,16 @@ import { createClient } from "@/utils/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-export default async function JugadorPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function JugadorPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ seccion?: string }>;
+}) {
   const { id } = await params;
+  const { seccion } = await searchParams;
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const isStaff = user?.user_metadata?.role !== "jugador";
@@ -25,11 +33,15 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
   return (
     <>
       <div className="mb-6">
-        {isStaff && (
+        {isStaff ? (
           <Link href="/jugadores" className="text-sm text-sky-600 hover:text-sky-700 hover:underline">
             ← Volver a jugadores/as
           </Link>
-        )}
+        ) : seccion ? (
+          <Link href={`/jugadores/${id}/menu`} className="text-sm text-sky-600 hover:text-sky-700 hover:underline">
+            ← Volver al menú
+          </Link>
+        ) : null}
         <h1 className="text-2xl font-bold text-slate-800 mt-2">
           {jugador.nombre} {jugador.apellido}
         </h1>
@@ -42,6 +54,7 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
         asistencias={asistencias}
         bienestar={bienestar}
         isStaff={isStaff}
+        seccion={seccion}
       />
     </>
   );

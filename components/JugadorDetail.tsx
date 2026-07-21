@@ -58,7 +58,7 @@ function mkDate(year: number, month: number, day: number): string {
 }
 
 export default function JugadorDetail({
-  jugador, torneos, evaluaciones, asistencias, bienestar, isStaff,
+  jugador, torneos, evaluaciones, asistencias, bienestar, isStaff, seccion,
 }: {
   jugador: Jugador;
   torneos: Torneo[];
@@ -66,7 +66,10 @@ export default function JugadorDetail({
   asistencias: Asistencia[];
   bienestar: Bienestar[];
   isStaff: boolean;
+  seccion?: string;
 }) {
+  // Cuando hay una sección activa y el usuario es jugador, solo se muestra esa sección
+  const mostrar = (id: string) => isStaff || !seccion || seccion === id;
   // ── Torneos ──────────────────────────────────────────────────────────────
   const [torneoList, setTorneoList] = useState(torneos);
   const [torneoError, setTorneoError] = useState<string | null>(null);
@@ -296,22 +299,24 @@ export default function JugadorDetail({
     <div className="flex flex-col gap-8">
 
       {/* ── Perfil ── */}
-      <div id="perfil" className={card}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-semibold text-slate-800">Perfil del jugador/a</h2>
-          {isStaff && perfilSaved && <span className="text-xs text-green-600">Guardado</span>}
+      {mostrar("perfil") && (
+        <div id="perfil" className={card}>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-semibold text-slate-800">Perfil del jugador/a</h2>
+            {isStaff && perfilSaved && <span className="text-xs text-green-600">Guardado</span>}
+          </div>
+          {isStaff ? (
+            <textarea defaultValue={jugador.perfil} rows={4}
+              placeholder="Descripción general del jugador/a, estilo de juego, nivel..."
+              onChange={(e) => debouncedSavePerfil(e.target.value)}
+              className={`w-full ${inputClass} resize-none`} />
+          ) : (
+            <p className="text-sm text-slate-700 whitespace-pre-wrap">
+              {jugador.perfil || <span className="text-slate-400 italic">Sin información.</span>}
+            </p>
+          )}
         </div>
-        {isStaff ? (
-          <textarea defaultValue={jugador.perfil} rows={4}
-            placeholder="Descripción general del jugador/a, estilo de juego, nivel..."
-            onChange={(e) => debouncedSavePerfil(e.target.value)}
-            className={`w-full ${inputClass} resize-none`} />
-        ) : (
-          <p className="text-sm text-slate-700 whitespace-pre-wrap">
-            {jugador.perfil || <span className="text-slate-400 italic">Sin información.</span>}
-          </p>
-        )}
-      </div>
+      )}
 
       {/* ── Correcciones técnicas y biomecánicas (solo staff) ── */}
       {isStaff && (
@@ -328,118 +333,126 @@ export default function JugadorDetail({
       )}
 
       {/* ── Objetivos ── */}
-      <div id="objetivos" className={card}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-semibold text-slate-800">Objetivos</h2>
-          {isStaff && objetivosSaved && <span className="text-xs text-green-600">Guardado</span>}
+      {mostrar("objetivos") && (
+        <div id="objetivos" className={card}>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-semibold text-slate-800">Objetivos</h2>
+            {isStaff && objetivosSaved && <span className="text-xs text-green-600">Guardado</span>}
+          </div>
+          {isStaff ? (
+            <textarea defaultValue={jugador.objetivos} rows={4}
+              placeholder="Objetivos a corto y largo plazo del jugador/a..."
+              onChange={(e) => debouncedSaveObjetivos(e.target.value)}
+              className={`w-full ${inputClass} resize-none`} />
+          ) : (
+            <p className="text-sm text-slate-700 whitespace-pre-wrap">
+              {jugador.objetivos || <span className="text-slate-400 italic">Sin información.</span>}
+            </p>
+          )}
         </div>
-        {isStaff ? (
-          <textarea defaultValue={jugador.objetivos} rows={4}
-            placeholder="Objetivos a corto y largo plazo del jugador/a..."
-            onChange={(e) => debouncedSaveObjetivos(e.target.value)}
-            className={`w-full ${inputClass} resize-none`} />
-        ) : (
-          <p className="text-sm text-slate-700 whitespace-pre-wrap">
-            {jugador.objetivos || <span className="text-slate-400 italic">Sin información.</span>}
-          </p>
-        )}
-      </div>
+      )}
 
       {/* ── Modelos a seguir ── */}
-      <div id="modelos" className={card}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-semibold text-slate-800">Modelos a seguir</h2>
-          {isStaff && modelosSaved && <span className="text-xs text-green-600">Guardado</span>}
+      {mostrar("modelos") && (
+        <div id="modelos" className={card}>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-semibold text-slate-800">Modelos a seguir</h2>
+            {isStaff && modelosSaved && <span className="text-xs text-green-600">Guardado</span>}
+          </div>
+          {isStaff ? (
+            <textarea defaultValue={jugador.modelos_a_seguir} rows={3}
+              placeholder="Jugadores/as de referencia que inspiran al jugador/a..."
+              onChange={(e) => debouncedSaveModelos(e.target.value)}
+              className={`w-full ${inputClass} resize-none`} />
+          ) : (
+            <p className="text-sm text-slate-700 whitespace-pre-wrap">
+              {jugador.modelos_a_seguir || <span className="text-slate-400 italic">Sin información.</span>}
+            </p>
+          )}
         </div>
-        {isStaff ? (
-          <textarea defaultValue={jugador.modelos_a_seguir} rows={3}
-            placeholder="Jugadores/as de referencia que inspiran al jugador/a..."
-            onChange={(e) => debouncedSaveModelos(e.target.value)}
-            className={`w-full ${inputClass} resize-none`} />
-        ) : (
-          <p className="text-sm text-slate-700 whitespace-pre-wrap">
-            {jugador.modelos_a_seguir || <span className="text-slate-400 italic">Sin información.</span>}
-          </p>
-        )}
-      </div>
+      )}
 
-      {/* ── Identidad conceptual ── */}
-      <div id="identidad" className={card}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-semibold text-slate-800">Identidad conceptual</h2>
-          {isStaff && identidadConceptualSaved && <span className="text-xs text-green-600">Guardado</span>}
-        </div>
-        {isStaff ? (
-          <textarea defaultValue={jugador.identidad_conceptual} rows={4}
-            placeholder="Concepto de juego, mentalidad, valores deportivos..."
-            onChange={(e) => debouncedSaveIdentidadConceptual(e.target.value)}
-            className={`w-full ${inputClass} resize-none`} />
-        ) : (
-          <p className="text-sm text-slate-700 whitespace-pre-wrap">
-            {jugador.identidad_conceptual || <span className="text-slate-400 italic">Sin información.</span>}
-          </p>
-        )}
-      </div>
-
-      {/* ── Identidad ejecutoria ── */}
-      <div className={card}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-semibold text-slate-800">Identidad ejecutoria</h2>
-          {isStaff && identidadEjecutoriaSaved && <span className="text-xs text-green-600">Guardado</span>}
-        </div>
-        {isStaff ? (
-          <textarea defaultValue={jugador.identidad_ejecutoria} rows={4}
-            placeholder="Forma de ejecutar, golpes característicos, automatismos..."
-            onChange={(e) => debouncedSaveIdentidadEjecutoria(e.target.value)}
-            className={`w-full ${inputClass} resize-none`} />
-        ) : (
-          <p className="text-sm text-slate-700 whitespace-pre-wrap">
-            {jugador.identidad_ejecutoria || <span className="text-slate-400 italic">Sin información.</span>}
-          </p>
-        )}
-      </div>
+      {/* ── Identidad conceptual + ejecutoria ── */}
+      {mostrar("identidad") && (
+        <>
+          <div id="identidad" className={card}>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-semibold text-slate-800">Identidad conceptual</h2>
+              {isStaff && identidadConceptualSaved && <span className="text-xs text-green-600">Guardado</span>}
+            </div>
+            {isStaff ? (
+              <textarea defaultValue={jugador.identidad_conceptual} rows={4}
+                placeholder="Concepto de juego, mentalidad, valores deportivos..."
+                onChange={(e) => debouncedSaveIdentidadConceptual(e.target.value)}
+                className={`w-full ${inputClass} resize-none`} />
+            ) : (
+              <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                {jugador.identidad_conceptual || <span className="text-slate-400 italic">Sin información.</span>}
+              </p>
+            )}
+          </div>
+          <div className={card}>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-semibold text-slate-800">Identidad ejecutoria</h2>
+              {isStaff && identidadEjecutoriaSaved && <span className="text-xs text-green-600">Guardado</span>}
+            </div>
+            {isStaff ? (
+              <textarea defaultValue={jugador.identidad_ejecutoria} rows={4}
+                placeholder="Forma de ejecutar, golpes característicos, automatismos..."
+                onChange={(e) => debouncedSaveIdentidadEjecutoria(e.target.value)}
+                className={`w-full ${inputClass} resize-none`} />
+            ) : (
+              <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                {jugador.identidad_ejecutoria || <span className="text-slate-400 italic">Sin información.</span>}
+              </p>
+            )}
+          </div>
+        </>
+      )}
 
       {/* ── Estilo de juego ── */}
-      <div id="estilo" className={card}>
-        <h2 className="text-base font-semibold text-slate-800 mb-4">Estilo de juego</h2>
-        <div className="flex flex-col gap-4">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-slate-700">Características</label>
-              {isStaff && estiloCaracteristicasSaved && <span className="text-xs text-green-600">Guardado</span>}
+      {mostrar("estilo") && (
+        <div id="estilo" className={card}>
+          <h2 className="text-base font-semibold text-slate-800 mb-4">Estilo de juego</h2>
+          <div className="flex flex-col gap-4">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-slate-700">Características</label>
+                {isStaff && estiloCaracteristicasSaved && <span className="text-xs text-green-600">Guardado</span>}
+              </div>
+              {isStaff ? (
+                <textarea defaultValue={jugador.estilo_caracteristicas} rows={3}
+                  placeholder="Características generales del estilo de juego..."
+                  onChange={(e) => debouncedSaveEstiloCaracteristicas(e.target.value)}
+                  className={`w-full ${inputClass} resize-none`} />
+              ) : (
+                <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                  {jugador.estilo_caracteristicas || <span className="text-slate-400 italic">Sin información.</span>}
+                </p>
+              )}
             </div>
-            {isStaff ? (
-              <textarea defaultValue={jugador.estilo_caracteristicas} rows={3}
-                placeholder="Características generales del estilo de juego..."
-                onChange={(e) => debouncedSaveEstiloCaracteristicas(e.target.value)}
-                className={`w-full ${inputClass} resize-none`} />
-            ) : (
-              <p className="text-sm text-slate-700 whitespace-pre-wrap">
-                {jugador.estilo_caracteristicas || <span className="text-slate-400 italic">Sin información.</span>}
-              </p>
-            )}
-          </div>
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-slate-700">Patrones</label>
-              {isStaff && estiloPatronesSaved && <span className="text-xs text-green-600">Guardado</span>}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-slate-700">Patrones</label>
+                {isStaff && estiloPatronesSaved && <span className="text-xs text-green-600">Guardado</span>}
+              </div>
+              {isStaff ? (
+                <textarea defaultValue={jugador.estilo_patrones} rows={3}
+                  placeholder="Patrones de juego habituales, secuencias tácticas..."
+                  onChange={(e) => debouncedSaveEstiloPatrones(e.target.value)}
+                  className={`w-full ${inputClass} resize-none`} />
+              ) : (
+                <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                  {jugador.estilo_patrones || <span className="text-slate-400 italic">Sin información.</span>}
+                </p>
+              )}
             </div>
-            {isStaff ? (
-              <textarea defaultValue={jugador.estilo_patrones} rows={3}
-                placeholder="Patrones de juego habituales, secuencias tácticas..."
-                onChange={(e) => debouncedSaveEstiloPatrones(e.target.value)}
-                className={`w-full ${inputClass} resize-none`} />
-            ) : (
-              <p className="text-sm text-slate-700 whitespace-pre-wrap">
-                {jugador.estilo_patrones || <span className="text-slate-400 italic">Sin información.</span>}
-              </p>
-            )}
           </div>
         </div>
-      </div>
+      )}
 
       {/* ── Evaluaciones físicas/kinésicas ── */}
-      <div id="evaluaciones" className={card}>
+      {mostrar("evaluaciones") && <div id="evaluaciones" className={card}>
         <h2 className="text-base font-semibold text-slate-800 mb-4">Evaluaciones físicas/kinésicas</h2>
 
         {isStaff && (
@@ -499,10 +512,10 @@ export default function JugadorDetail({
             ))}
           </div>
         )}
-      </div>
+      </div>}
 
       {/* ── Asistencias ── */}
-      <div id="asistencias" className={card}>
+      {mostrar("asistencias") && <div id="asistencias" className={card}>
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <h2 className="text-base font-semibold text-slate-800">Asistencias</h2>
           <div className="flex gap-1 p-1 bg-slate-100 rounded-xl">
@@ -648,10 +661,10 @@ export default function JugadorDetail({
             </div>
           );
         })()}
-      </div>
+      </div>}
 
       {/* ── Bienestar subjetivo ── */}
-      <div id="bienestar" className={card}>
+      {mostrar("bienestar") && <div id="bienestar" className={card}>
         <h2 className="text-base font-semibold text-slate-800 mb-4">Bienestar subjetivo</h2>
 
         {isStaff && (
@@ -718,10 +731,10 @@ export default function JugadorDetail({
             ))}
           </div>
         )}
-      </div>
+      </div>}
 
       {/* ── Calendario de torneos ── */}
-      <div id="torneos" className={card}>
+      {mostrar("torneos") && <div id="torneos" className={card}>
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <h2 className="text-base font-semibold text-slate-800">Calendario de torneos</h2>
           <div className="flex gap-1 p-1 bg-slate-100 rounded-xl">
@@ -877,7 +890,7 @@ export default function JugadorDetail({
             </div>
           );
         })()}
-      </div>
+      </div>}
 
       {/* ── Gestión de acceso (solo staff) ── */}
       {isStaff && (
