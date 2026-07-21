@@ -90,6 +90,12 @@ export interface Bienestar {
   fecha: string;
   valor: number;
   nota: string;
+  fatiga: number | null;
+  dolor_muscular: number | null;
+  calidad_sueno: number | null;
+  estado_animico: number | null;
+  nota_dolor: string;
+  nota_sueno: string;
   created_at: string;
 }
 

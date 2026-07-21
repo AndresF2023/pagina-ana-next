@@ -36,10 +36,54 @@ const ESTADO_LABELS: Record<EstadoAsistencia, string> = {
   competencia: "Competencia",
 };
 
-function bienestarColor(v: number) {
-  if (v <= 3) return "bg-red-100 text-red-700 border-red-200";
-  if (v <= 6) return "bg-amber-100 text-amber-700 border-amber-200";
+// tipo "inverso": 1=bien (verde), 10=mal (rojo) — fatiga, dolor
+// tipo "normal": 1=mal (rojo), 10=bien (verde) — sueño, ánimo
+function colorMetrica(v: number, tipo: "inverso" | "normal") {
+  const bajo = v <= 3; const medio = v <= 6;
+  if (tipo === "inverso") {
+    if (bajo) return "bg-green-100 text-green-700 border-green-200";
+    if (medio) return "bg-amber-100 text-amber-700 border-amber-200";
+    return "bg-red-100 text-red-700 border-red-200";
+  }
+  if (bajo) return "bg-red-100 text-red-700 border-red-200";
+  if (medio) return "bg-amber-100 text-amber-700 border-amber-200";
   return "bg-green-100 text-green-700 border-green-200";
+}
+
+function btnColorMetrica(v: number, tipo: "inverso" | "normal") {
+  const bajo = v <= 3; const medio = v <= 6;
+  if (tipo === "inverso") {
+    if (bajo) return "bg-green-50 text-green-600 border-green-200 hover:bg-green-100";
+    if (medio) return "bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100";
+    return "bg-red-50 text-red-600 border-red-200 hover:bg-red-100";
+  }
+  if (bajo) return "bg-red-50 text-red-600 border-red-200 hover:bg-red-100";
+  if (medio) return "bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100";
+  return "bg-green-50 text-green-600 border-green-200 hover:bg-green-100";
+}
+
+function MetricaBotones({ label, desc, value, onChange, tipo }: {
+  label: string; desc: string; value: number | null;
+  onChange: (v: number) => void; tipo: "inverso" | "normal";
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <div>
+        <p className="text-sm font-medium text-slate-700">{label}</p>
+        <p className="text-xs text-slate-400">{desc}</p>
+      </div>
+      <div className="flex gap-1 flex-wrap">
+        {[1,2,3,4,5,6,7,8,9,10].map((n) => (
+          <button key={n} type="button" onClick={() => onChange(n)}
+            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl text-xs sm:text-sm font-semibold border transition-colors cursor-pointer ${
+              value === n ? "bg-sky-600 text-white border-sky-600" : btnColorMetrica(n, tipo)
+            }`}>
+            {n}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 // ── Helpers calendario ────────────────────────────────────────────────────
@@ -220,7 +264,10 @@ export default function JugadorDetail({
   // ── Bienestar subjetivo ───────────────────────────────────────────────────
   const [bienestarList, setBienestarList] = useState(bienestar);
   const [bienestarError, setBienestarError] = useState<string | null>(null);
-  const [bienestarValor, setBienestarValor] = useState<number | null>(null);
+  const [bFatiga, setBFatiga] = useState<number | null>(null);
+  const [bDolor, setBDolor] = useState<number | null>(null);
+  const [bSueno, setBSueno] = useState<number | null>(null);
+  const [bAnimico, setBAnimico] = useState<number | null>(null);
   const [isPendingBienestar, startBienestarTransition] = useTransition();
   const [isPendingDeleteBienestar, startDeleteBienestarTransition] = useTransition();
   const bienestarFormRef = useRef<HTMLFormElement>(null);
@@ -230,17 +277,34 @@ export default function JugadorDetail({
     setBienestarError(null);
     const formData = new FormData(e.currentTarget);
     const fecha = String(formData.get("fecha") ?? "").trim();
-    const nota = String(formData.get("nota") ?? "").trim();
+    const nota_dolor = String(formData.get("nota_dolor") ?? "").trim();
+    const nota_sueno = String(formData.get("nota_sueno") ?? "").trim();
 
     if (!fecha) { setBienestarError("Seleccioná una fecha."); return; }
-    if (!bienestarValor) { setBienestarError("Seleccioná un valor."); return; }
+    if (!bFatiga) { setBienestarError("Indicá tu nivel de fatiga."); return; }
+    if (!bDolor) { setBienestarError("Indicá tu nivel de dolor muscular."); return; }
+    if (!bSueno) { setBienestarError("Indicá la calidad de tu sueño."); return; }
+    if (!bAnimico) { setBienestarError("Indicá tu estado anímico."); return; }
 
     startBienestarTransition(async () => {
       try {
-        await addBienestar(jugador.id, fecha, bienestarValor, nota);
+        await addBienestar(jugador.id, fecha, bFatiga, bDolor, nota_dolor, bSueno, nota_sueno, bAnimico);
         bienestarFormRef.current?.reset();
-        setBienestarValor(null);
-        setBienestarList(prev => [{ id: Date.now().toString(), jugador_id: jugador.id, fecha, valor: bienestarValor, nota, created_at: new Date().toISOString() }, ...prev]);
+        setBFatiga(null); setBDolor(null); setBSueno(null); setBAnimico(null);
+        setBienestarList(prev => [{
+          id: Date.now().toString(),
+          jugador_id: jugador.id,
+          fecha,
+          valor: 0,
+          nota: "",
+          fatiga: bFatiga,
+          dolor_muscular: bDolor,
+          nota_dolor,
+          calidad_sueno: bSueno,
+          nota_sueno,
+          estado_animico: bAnimico,
+          created_at: new Date().toISOString(),
+        }, ...prev]);
       } catch (err) {
         setBienestarError(err instanceof Error ? err.message : "Error al guardar.");
       }
@@ -670,65 +734,118 @@ export default function JugadorDetail({
       {mostrar("bienestar") && <div id="bienestar" className={card}>
         <h2 className="text-base font-semibold text-slate-800 mb-4">Bienestar subjetivo</h2>
 
-        {isStaff && (
-          <form ref={bienestarFormRef} onSubmit={handleAddBienestar} noValidate className="flex flex-col gap-3 mb-6">
-            <div className="flex flex-col sm:flex-row gap-3 items-start">
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-slate-700">Fecha</label>
-                <input name="fecha" type="date" className={inputClass} />
-              </div>
-              <div className="flex flex-col gap-1 flex-1">
-                <label className="text-sm font-medium text-slate-700">Nota (opcional)</label>
-                <input name="nota" type="text" placeholder="Observaciones..." className={inputClass} />
-              </div>
+        {/* Formulario: solo jugador */}
+        {!isStaff && (
+          <form ref={bienestarFormRef} onSubmit={handleAddBienestar} noValidate className="flex flex-col gap-5 mb-6 border-b border-slate-100 pb-6">
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-slate-700">Fecha</label>
+              <input name="fecha" type="date" className={`${inputClass} max-w-[200px]`} />
             </div>
+
+            <MetricaBotones
+              label="Fatiga"
+              desc="1 = nada de fatiga · 10 = muy fatigado"
+              value={bFatiga}
+              onChange={setBFatiga}
+              tipo="inverso"
+            />
+
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-slate-700">Valor (1 = muy mal · 10 = excelente)</label>
-              <div className="flex gap-1 sm:gap-1.5 flex-wrap">
-                {[1,2,3,4,5,6,7,8,9,10].map((n) => (
-                  <button key={n} type="button" onClick={() => setBienestarValor(n)}
-                    className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl text-xs sm:text-sm font-semibold border transition-colors cursor-pointer ${
-                      bienestarValor === n
-                        ? "bg-sky-600 text-white border-sky-600"
-                        : n <= 3
-                          ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
-                          : n <= 6
-                            ? "bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100"
-                            : "bg-green-50 text-green-600 border-green-200 hover:bg-green-100"
-                    }`}>
-                    {n}
-                  </button>
-                ))}
-              </div>
+              <MetricaBotones
+                label="Dolor muscular"
+                desc="1 = nada de dolor · 10 = mucho dolor"
+                value={bDolor}
+                onChange={setBDolor}
+                tipo="inverso"
+              />
+              <input
+                name="nota_dolor"
+                type="text"
+                placeholder="Zona con dolor (opcional, ej: espalda baja)"
+                className={inputClass}
+              />
             </div>
-            {bienestarError && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{bienestarError}</p>}
+
+            <div className="flex flex-col gap-2">
+              <MetricaBotones
+                label="Calidad del sueño"
+                desc="1 = muy mal sueño · 10 = excelente"
+                value={bSueno}
+                onChange={setBSueno}
+                tipo="normal"
+              />
+              <input
+                name="nota_sueno"
+                type="text"
+                placeholder="Horas de sueño (opcional, ej: 8hs)"
+                className={inputClass}
+              />
+            </div>
+
+            <MetricaBotones
+              label="Estado anímico"
+              desc="1 = bajo · 10 = excelente"
+              value={bAnimico}
+              onChange={setBAnimico}
+              tipo="normal"
+            />
+
+            {bienestarError && (
+              <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{bienestarError}</p>
+            )}
             <button type="submit" disabled={isPendingBienestar} className={btnPrimary}>
               {isPendingBienestar ? "Guardando..." : "Registrar bienestar"}
             </button>
           </form>
         )}
 
+        {/* Historial */}
         {bienestarList.length === 0 ? (
           <p className="text-slate-400 text-sm text-center border border-dashed border-slate-200 rounded-xl py-6">Sin registros de bienestar.</p>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             {bienestarList.map((b) => (
-              <div key={b.id} className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <span className={`w-9 h-9 rounded-xl text-sm font-bold border flex items-center justify-center shrink-0 ${bienestarColor(b.valor)}`}>
-                    {b.valor}
-                  </span>
-                  <div>
-                    <p className="text-sm font-medium text-slate-800">{formatFecha(b.fecha)}</p>
+              <div key={b.id} className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-slate-800">{formatFecha(b.fecha)}</p>
+                  {isStaff && (
+                    <button type="button" disabled={isPendingDeleteBienestar}
+                      onClick={() => handleDeleteBienestar(b.id)}
+                      className="text-xs text-red-500 hover:text-red-700 hover:underline cursor-pointer disabled:opacity-50">
+                      Eliminar
+                    </button>
+                  )}
+                </div>
+                {b.fatiga != null ? (
+                  <div className="flex flex-col gap-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      {([
+                        { label: "Fatiga", val: b.fatiga, tipo: "inverso" },
+                        { label: "Dolor", val: b.dolor_muscular!, tipo: "inverso" },
+                        { label: "Sueño", val: b.calidad_sueno!, tipo: "normal" },
+                        { label: "Ánimo", val: b.estado_animico!, tipo: "normal" },
+                      ] as const).map(({ label, val, tipo }) => (
+                        <div key={label} className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${colorMetrica(val, tipo)}`}>
+                          <span className="text-lg font-bold">{val}</span>
+                          <span className="text-xs font-medium">{label}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {(b.nota_dolor || b.nota_sueno) && (
+                      <div className="flex flex-col gap-0.5">
+                        {b.nota_dolor && <p className="text-xs text-slate-500">Dolor en: {b.nota_dolor}</p>}
+                        {b.nota_sueno && <p className="text-xs text-slate-500">Horas de sueño: {b.nota_sueno}</p>}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* Registro antiguo: solo muestra el valor general */
+                  <div className="flex items-center gap-2">
+                    <span className={`w-9 h-9 rounded-xl text-sm font-bold border flex items-center justify-center shrink-0 ${colorMetrica(b.valor, "normal")}`}>
+                      {b.valor}
+                    </span>
                     {b.nota && <p className="text-xs text-slate-500">{b.nota}</p>}
                   </div>
-                </div>
-                {isStaff && (
-                  <button type="button" disabled={isPendingDeleteBienestar}
-                    onClick={() => handleDeleteBienestar(b.id)}
-                    className="text-xs text-red-500 hover:text-red-700 hover:underline cursor-pointer disabled:opacity-50">
-                    Eliminar
-                  </button>
                 )}
               </div>
             ))}

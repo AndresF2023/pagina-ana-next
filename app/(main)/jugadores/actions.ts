@@ -172,13 +172,27 @@ export async function getBienestar(jugadorId: string): Promise<Bienestar[]> {
 export async function addBienestar(
   jugadorId: string,
   fecha: string,
-  valor: number,
-  nota: string
+  fatiga: number,
+  dolor_muscular: number,
+  nota_dolor: string,
+  calidad_sueno: number,
+  nota_sueno: string,
+  estado_animico: number
 ): Promise<void> {
   if (!fecha) throw new Error("Seleccioná una fecha.");
-  if (valor < 1 || valor > 10) throw new Error("El valor debe estar entre 1 y 10.");
   const supabase = await createClient();
-  const { error } = await supabase.from("bienestar").insert({ jugador_id: jugadorId, fecha, valor, nota });
+  const { error } = await supabase.from("bienestar").insert({
+    jugador_id: jugadorId,
+    fecha,
+    valor: 0,
+    nota: "",
+    fatiga,
+    dolor_muscular,
+    nota_dolor,
+    calidad_sueno,
+    nota_sueno,
+    estado_animico,
+  });
   if (error) throw new Error("Error al guardar el bienestar.");
   revalidatePath(`/jugadores/${jugadorId}`);
 }
