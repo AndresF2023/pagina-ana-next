@@ -20,6 +20,48 @@ export async function getStaffAccounts(): Promise<{ id: string; email: string }[
     .map((u) => ({ id: u.id, email: u.email ?? "" }));
 }
 
+export async function getAdminAccounts(): Promise<{ id: string; email: string }[]> {
+  await assertAdmin();
+  const admin = createAdminClient();
+  const { data, error } = await admin.auth.admin.listUsers();
+  if (error) return [];
+  return data.users
+    .filter((u) => u.user_metadata?.role === "admin")
+    .map((u) => ({ id: u.id, email: u.email ?? "" }));
+}
+
+export async function createAdminAccount(
+  email: string,
+  password: string
+): Promise<{ error: string } | null> {
+  try {
+    await assertAdmin();
+    const admin = createAdminClient();
+    const { error } = await admin.auth.admin.createUser({
+      email,
+      password,
+      user_metadata: { role: "admin" },
+      email_confirm: true,
+    });
+    if (error) return { error: `Error al crear la cuenta: ${error.message}` };
+    return null;
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Error inesperado." };
+  }
+}
+
+export async function deleteAdminAccount(userId: string): Promise<{ error: string } | null> {
+  try {
+    await assertAdmin();
+    const admin = createAdminClient();
+    const { error } = await admin.auth.admin.deleteUser(userId);
+    if (error) return { error: `Error al eliminar la cuenta: ${error.message}` };
+    return null;
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Error inesperado." };
+  }
+}
+
 export async function createStaffAccount(
   email: string,
   password: string
