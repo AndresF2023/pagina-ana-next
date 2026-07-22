@@ -644,7 +644,7 @@ export default function JugadorDetail({
                 Cancelar
               </button>
             </div>
-          )}
+          ) : null}
         </div>
       )}
 
