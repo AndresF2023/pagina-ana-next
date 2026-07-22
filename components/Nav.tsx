@@ -3,14 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const links = [
+const staffLinks = [
   { href: "/ejercicios", label: "Biblioteca" },
   { href: "/jugadores", label: "Jugadores/as" },
   { href: "/planificacion", label: "Planificación" },
 ];
 
-export default function Nav() {
+export default function Nav({ isAdmin }: { isAdmin?: boolean }) {
   const pathname = usePathname();
+  const links = isAdmin ? [...staffLinks, { href: "/admin", label: "Admin" }] : staffLinks;
+
   return (
     <nav className="flex gap-1 flex-wrap justify-center">
       {links.map(({ href, label }) => (

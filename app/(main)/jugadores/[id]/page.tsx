@@ -18,7 +18,9 @@ export default async function JugadorPage({
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const isStaff = user?.user_metadata?.role !== "jugador";
+  const role = user?.user_metadata?.role;
+  const isStaff = role !== "jugador";
+  const canEdit = role !== "jugador" && role !== "staff";
 
   const jugador = await getJugador(id);
   if (!jugador) notFound();
@@ -54,6 +56,7 @@ export default async function JugadorPage({
         asistencias={asistencias}
         bienestar={bienestar}
         isStaff={isStaff}
+        canEdit={canEdit}
         seccion={seccion}
       />
     </>

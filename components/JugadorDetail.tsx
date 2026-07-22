@@ -106,7 +106,7 @@ function mkDate(year: number, month: number, day: number): string {
 }
 
 export default function JugadorDetail({
-  jugador, torneos, evaluaciones, asistencias, bienestar, isStaff, seccion,
+  jugador, torneos, evaluaciones, asistencias, bienestar, isStaff, canEdit, seccion,
 }: {
   jugador: Jugador;
   torneos: Torneo[];
@@ -114,6 +114,7 @@ export default function JugadorDetail({
   asistencias: Asistencia[];
   bienestar: Bienestar[];
   isStaff: boolean;
+  canEdit: boolean;
   seccion?: string;
 }) {
   // Filtra por sección para todos (staff y jugador)
@@ -459,12 +460,18 @@ export default function JugadorDetail({
         <div className={card}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-semibold text-slate-800">Correcciones técnicas y biomecánicas</h2>
-            {correccionesSaved && <span className="text-xs text-green-600">Guardado</span>}
+            {canEdit && correccionesSaved && <span className="text-xs text-green-600">Guardado</span>}
           </div>
-          <textarea defaultValue={jugador.correcciones_tecnicas} rows={4}
-            placeholder="Aspectos técnicos a trabajar, correcciones pendientes..."
-            onChange={(e) => debouncedSaveCorrecciones(e.target.value)}
-            className={`w-full ${inputClass} resize-none mb-4`} />
+          {canEdit ? (
+            <textarea defaultValue={jugador.correcciones_tecnicas} rows={4}
+              placeholder="Aspectos técnicos a trabajar, correcciones pendientes..."
+              onChange={(e) => debouncedSaveCorrecciones(e.target.value)}
+              className={`w-full ${inputClass} resize-none mb-4`} />
+          ) : (
+            <p className="text-sm text-slate-700 whitespace-pre-wrap mb-4">
+              {jugador.correcciones_tecnicas || <span className="text-slate-400 italic">Sin información.</span>}
+            </p>
+          )}
 
           {/* Video guardado */}
           {cVideoUrl && (() => {
@@ -474,10 +481,12 @@ export default function JugadorDetail({
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-slate-700">Video</span>
-                  <button type="button" onClick={handleDeleteCorreccionVideo}
-                    className="text-xs text-red-500 hover:text-red-700 hover:underline cursor-pointer">
-                    Eliminar video
-                  </button>
+                  {canEdit && (
+                    <button type="button" onClick={handleDeleteCorreccionVideo}
+                      className="text-xs text-red-500 hover:text-red-700 hover:underline cursor-pointer">
+                      Eliminar video
+                    </button>
+                  )}
                 </div>
                 <div className="aspect-video bg-black rounded-xl overflow-hidden">
                   {direct ? (
@@ -506,10 +515,12 @@ export default function JugadorDetail({
                   <div key={i} className="relative group aspect-square">
                     <img src={url} alt={`Corrección ${i + 1}`}
                       className="w-full h-full object-cover rounded-xl border border-slate-200" />
-                    <button type="button" onClick={() => handleDeleteCorreccionImagen(url)}
-                      className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                      ×
-                    </button>
+                    {canEdit && (
+                      <button type="button" onClick={() => handleDeleteCorreccionImagen(url)}
+                        className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                        ×
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -517,12 +528,12 @@ export default function JugadorDetail({
           )}
 
           {/* Agregar multimedia */}
-          {!cShowAdd ? (
+          {canEdit && !cShowAdd ? (
             <button type="button" onClick={() => { setCShowAdd(true); setCMediaError(null); }}
               className="text-sm text-sky-600 hover:text-sky-700 hover:underline cursor-pointer">
               + Agregar {cVideoUrl ? "fotos" : "video o fotos"}
             </button>
-          ) : (
+          ) : canEdit ? (
             <div className="border border-slate-200 rounded-xl p-4 flex flex-col gap-4">
               {/* Tabs */}
               <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-fit">
@@ -642,9 +653,9 @@ export default function JugadorDetail({
         <div id="objetivos" className={card}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-semibold text-slate-800">Objetivos</h2>
-            {isStaff && objetivosSaved && <span className="text-xs text-green-600">Guardado</span>}
+            {canEdit && objetivosSaved && <span className="text-xs text-green-600">Guardado</span>}
           </div>
-          {isStaff ? (
+          {canEdit ? (
             <textarea defaultValue={jugador.objetivos} rows={4}
               placeholder="Objetivos a corto y largo plazo del jugador/a..."
               onChange={(e) => debouncedSaveObjetivos(e.target.value)}
@@ -662,9 +673,9 @@ export default function JugadorDetail({
         <div id="modelos" className={card}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-semibold text-slate-800">Modelos a seguir</h2>
-            {isStaff && modelosSaved && <span className="text-xs text-green-600">Guardado</span>}
+            {canEdit && modelosSaved && <span className="text-xs text-green-600">Guardado</span>}
           </div>
-          {isStaff ? (
+          {canEdit ? (
             <textarea defaultValue={jugador.modelos_a_seguir} rows={3}
               placeholder="Jugadores/as de referencia que inspiran al jugador/a..."
               onChange={(e) => debouncedSaveModelos(e.target.value)}
@@ -683,9 +694,9 @@ export default function JugadorDetail({
           <div id="identidad" className={card}>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base font-semibold text-slate-800">Identidad conceptual</h2>
-              {isStaff && identidadConceptualSaved && <span className="text-xs text-green-600">Guardado</span>}
+              {canEdit && identidadConceptualSaved && <span className="text-xs text-green-600">Guardado</span>}
             </div>
-            {isStaff ? (
+            {canEdit ? (
               <textarea defaultValue={jugador.identidad_conceptual} rows={4}
                 placeholder="Concepto de juego, mentalidad, valores deportivos..."
                 onChange={(e) => debouncedSaveIdentidadConceptual(e.target.value)}
@@ -699,9 +710,9 @@ export default function JugadorDetail({
           <div className={card}>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base font-semibold text-slate-800">Identidad ejecutoria</h2>
-              {isStaff && identidadEjecutoriaSaved && <span className="text-xs text-green-600">Guardado</span>}
+              {canEdit && identidadEjecutoriaSaved && <span className="text-xs text-green-600">Guardado</span>}
             </div>
-            {isStaff ? (
+            {canEdit ? (
               <textarea defaultValue={jugador.identidad_ejecutoria} rows={4}
                 placeholder="Forma de ejecutar, golpes característicos, automatismos..."
                 onChange={(e) => debouncedSaveIdentidadEjecutoria(e.target.value)}
@@ -723,9 +734,9 @@ export default function JugadorDetail({
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-slate-700">Características</label>
-                {isStaff && estiloCaracteristicasSaved && <span className="text-xs text-green-600">Guardado</span>}
+                {canEdit && estiloCaracteristicasSaved && <span className="text-xs text-green-600">Guardado</span>}
               </div>
-              {isStaff ? (
+              {canEdit ? (
                 <textarea defaultValue={jugador.estilo_caracteristicas} rows={3}
                   placeholder="Características generales del estilo de juego..."
                   onChange={(e) => debouncedSaveEstiloCaracteristicas(e.target.value)}
@@ -739,9 +750,9 @@ export default function JugadorDetail({
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-slate-700">Patrones</label>
-                {isStaff && estiloPatronesSaved && <span className="text-xs text-green-600">Guardado</span>}
+                {canEdit && estiloPatronesSaved && <span className="text-xs text-green-600">Guardado</span>}
               </div>
-              {isStaff ? (
+              {canEdit ? (
                 <textarea defaultValue={jugador.estilo_patrones} rows={3}
                   placeholder="Patrones de juego habituales, secuencias tácticas..."
                   onChange={(e) => debouncedSaveEstiloPatrones(e.target.value)}
@@ -760,7 +771,7 @@ export default function JugadorDetail({
       {mostrar("evaluaciones") && <div id="evaluaciones" className={card}>
         <h2 className="text-base font-semibold text-slate-800 mb-4">Evaluaciones físicas/kinésicas</h2>
 
-        {isStaff && (
+        {canEdit && (
           <form ref={evalFormRef} onSubmit={handleAddEvaluacion} noValidate className="flex flex-col gap-3 mb-6">
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex flex-col gap-1 flex-1">
@@ -805,7 +816,7 @@ export default function JugadorDetail({
                 <div className="flex items-center gap-3">
                   <a href={ev.pdf_url} target="_blank" rel="noopener noreferrer"
                     className="text-xs text-sky-600 hover:text-sky-700 hover:underline">Ver PDF ↗</a>
-                  {isStaff && (
+                  {canEdit && (
                     <button type="button" disabled={isPendingDeleteEval}
                       onClick={() => handleDeleteEval(ev.id)}
                       className="text-xs text-red-500 hover:text-red-700 hover:underline cursor-pointer disabled:opacity-50">
@@ -833,7 +844,7 @@ export default function JugadorDetail({
           </div>
         </div>
 
-        {isStaff && (
+        {canEdit && (
           <form ref={asistenciaFormRef} onSubmit={handleAddAsistencia} noValidate className="flex flex-col gap-3 mb-6">
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex flex-col gap-1">
@@ -878,7 +889,7 @@ export default function JugadorDetail({
                       {a.nota && <p className="text-xs text-slate-500">{a.nota}</p>}
                     </div>
                   </div>
-                  {isStaff && (
+                  {canEdit && (
                     <button type="button" disabled={isPendingDeleteAsistencia}
                       onClick={() => handleDeleteAsistencia(a.id)}
                       className="text-xs text-red-500 hover:text-red-700 hover:underline cursor-pointer disabled:opacity-50">
@@ -1047,7 +1058,7 @@ export default function JugadorDetail({
               <div key={b.id} className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-medium text-slate-800">{formatFecha(b.fecha)}</p>
-                  {isStaff && (
+                  {canEdit && (
                     <button type="button" disabled={isPendingDeleteBienestar}
                       onClick={() => handleDeleteBienestar(b.id)}
                       className="text-xs text-red-500 hover:text-red-700 hover:underline cursor-pointer disabled:opacity-50">
@@ -1106,7 +1117,7 @@ export default function JugadorDetail({
           </div>
         </div>
 
-        {isStaff && (
+        {canEdit && (
           <form ref={torneoFormRef} onSubmit={(e) => {
             e.preventDefault();
             setTorneoError(null);
@@ -1165,7 +1176,7 @@ export default function JugadorDetail({
                       {formatFecha(t.fecha)}{t.fecha_fin && ` → ${formatFecha(t.fecha_fin)}`}{t.lugar && ` · ${t.lugar}`}
                     </p>
                   </div>
-                  {isStaff && (
+                  {canEdit && (
                     <button type="button" disabled={isPendingDeleteTorneo}
                       onClick={() => { startDeleteTorneoTransition(async () => { await deleteTorneo(t.id, jugador.id); setTorneoList(prev => prev.filter(x => x.id !== t.id)); }); }}
                       className="text-xs text-red-500 hover:text-red-700 hover:underline cursor-pointer disabled:opacity-50">

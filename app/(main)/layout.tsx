@@ -5,7 +5,9 @@ import SignOutButton from "@/components/SignOutButton";
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const isStaff = user?.user_metadata?.role !== "jugador";
+  const role = user?.user_metadata?.role;
+  const isStaff = role !== "jugador";
+  const isAdmin = role !== "jugador" && role !== "staff";
 
   return (
     <>
@@ -16,7 +18,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
             <img src="/club.png" alt="Logo Club" width={36} height={36} className="rounded-full sm:w-11 sm:h-11" />
             <span className="text-lg sm:text-2xl font-bold">Tenis del 9</span>
           </div>
-          {isStaff && <Nav />}
+          {isStaff && <Nav isAdmin={isAdmin} />}
           <div className="shrink-0"><SignOutButton /></div>
         </div>
       </header>

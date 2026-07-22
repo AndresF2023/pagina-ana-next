@@ -32,9 +32,13 @@ export default async function JugadorMenuPage({ params }: { params: Promise<{ id
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const isStaff = user?.user_metadata?.role !== "jugador";
+  const role = user?.user_metadata?.role;
+  const isStaff = role !== "jugador";
+  const isAdmin = role !== "jugador" && role !== "staff";
 
-  const secciones = isStaff ? seccionesStaff : seccionesJugador;
+  const secciones = isStaff
+    ? (isAdmin ? seccionesStaff : seccionesStaff.filter((s) => s.seccion !== "acceso"))
+    : seccionesJugador;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8">
